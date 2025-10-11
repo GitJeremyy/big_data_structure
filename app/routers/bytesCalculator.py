@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from services.schema_client import Schema
-import json
+from services.statistics import Statistics
 
 router = APIRouter()
 
@@ -223,13 +223,18 @@ amazon_sample_schema = """{
 @router.get("/bytesCalculator")
 async def calculate_bytes():
     schema = Schema(amazon_sample_schema)
+    stats = Statistics()
 
     result = schema.detect_entities_and_relations()
 
-    # print("\n\n=== RÉSULTAT JSON ===")
-    # print(json.dumps(result, indent=2))
-
+    # For debugging
+    stats.describe()
     schema.print_entities_and_relations()
 
-
-    return {"message": "Byte calculation successful!"}
+    return {
+        "message": "Byte calculation successful!",
+        "entities_detected": len(result["entities"]),
+        "nested_entities_detected": len(result["nested_entities"]),
+        "nb_clients": stats.nb_clients,
+        "nb_products": stats.nb_products
+    }

@@ -230,3 +230,42 @@ class Schema:
         #     print(f"  {rel['from']} --[{rel['type']}]--> {rel['to']} ({rel['cardinality']}) via '{rel['attribute']}'")
         
         return result
+    
+    def estimate_document_size(self, entity):
+        """
+        Estimate the average document size (in bytes) for one entity
+        based on attribute types, using official approximation rules.
+        """
+
+        # official approximate byte sizes
+        type_sizes = {
+            "number": 8,        # integers/floats
+            "integer": 8,
+            "string": 80,       # short string
+            "date": 20,         # ISO-style date string
+            "longstring": 200,  # long text (description, etc.)
+            "array": 12,        # base cost for arrays (plus inner items)
+            "object": 12,       # small nested key-value
+            "reference": 12,    # embedded or referenced object
+            "unknown": 8        # fallback for unknown types
+        }
+
+        total_size = 0
+
+        for attr in entity["attributes"]:
+            attr_type = attr.get("type", "unknown")
+
+            # handle specific fields specially
+            name = attr["name"].lower()
+
+            # Detect "description" or "comment" → longstring
+            if "description" in name or "comment" in name:
+                total_size += type_sizes["longstring"]
+            # Detect "date" fields → date
+            elif "date" in name:
+                total_size += type_sizes["date"]
+            # Normal type lookup
+            else:
+                total_size += type_sizes.get(attr_type, type_sizes["unknown"])
+
+        return total_size
