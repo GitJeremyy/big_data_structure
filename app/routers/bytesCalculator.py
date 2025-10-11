@@ -231,10 +231,11 @@ async def calculate_bytes():
     stats.describe()
     schema.print_entities_and_relations()
 
+    # Compute collection sizes
+    sizes = schema.compute_collection_sizes(stats)
+
     return {
         "message": "Byte calculation successful!",
-        "entities_detected": len(result["entities"]),
-        "nested_entities_detected": len(result["nested_entities"]),
-        "nb_clients": stats.nb_clients,
-        "nb_products": stats.nb_products
+        "database_total": sizes["Database_Total"]["total_size_human"],
+        "collections": sizes
     }

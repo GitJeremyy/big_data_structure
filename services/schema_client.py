@@ -269,3 +269,61 @@ class Schema:
                 total_size += type_sizes.get(attr_type, type_sizes["unknown"])
 
         return total_size
+    
+    def compute_collection_sizes(self, stats):
+        """
+        Compute estimated size (in bytes) for each collection
+        based on the number of documents and estimated document size.
+        Also computes the total database size.
+        """
+        entity_results = self.detect_entities_and_relations()
+        entities = entity_results["entities"]
+
+        results = {}
+        total_db_size = 0
+
+        for entity in entities:
+            name = entity["name"]
+
+            # Estimate number of documents per collection
+            if name.lower() == "client":
+                nb_docs = stats.nb_clients
+            elif name.lower() == "product":
+                nb_docs = stats.nb_products
+            elif name.lower() == "orderline":
+                nb_docs = stats.nb_orderlines
+            elif name.lower() == "warehouse":
+                nb_docs = stats.nb_warehouses
+            elif name.lower() == "stock":
+                nb_docs = stats.nb_products  # one stock entry per product
+            else:
+                nb_docs = 0  # fallback
+
+            avg_size = self.estimate_document_size(entity)
+            total_size = nb_docs * avg_size
+            total_db_size += total_size
+
+            results[name] = {
+                "nb_docs": nb_docs,
+                "avg_size_bytes": avg_size,
+                "total_size_bytes": total_size,
+                "total_size_human": self._format_bytes(total_size)
+            }
+
+        # Add total DB summary
+        results["Database_Total"] = {
+            "total_size_bytes": total_db_size,
+            "total_size_human": self._format_bytes(total_db_size)
+        }
+
+        return results
+    
+    def _format_bytes(self, size_in_bytes):
+        """
+        Convert bytes into a human-readable format (B, KB, MB, GB, TB).
+        """
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if size_in_bytes < 1024:
+                return f"{size_in_bytes:.2f} {unit}"
+            size_in_bytes /= 1024
+        return f"{size_in_bytes:.2f} PB"  # just in case it’s huge
