@@ -4,6 +4,40 @@ class Statistics:
     used for calculating collection sizes, sharding, etc.
     """
 
+    # official approximate byte sizes (class-level, single source of truth)
+    # integers/floats
+    SIZE_NUMBER = 8
+    SIZE_INTEGER = 8
+    # short string
+    SIZE_STRING = 80
+    # ISO-style date string
+    SIZE_DATE = 20
+    # long text (description, etc.)
+    SIZE_LONGSTRING = 200
+    # base cost for arrays (plus inner items)
+    SIZE_ARRAY = 12
+    # small nested key-value
+    SIZE_OBJECT = 12
+    # embedded or referenced object
+    SIZE_REFERENCE = 12
+    # fallback for unknown types
+    SIZE_UNKNOWN = 8
+
+    @classmethod
+    def size_map(cls):
+        """Convenience mapping for consumers that look up by logical type name."""
+        return {
+            "number": cls.SIZE_NUMBER,
+            "integer": cls.SIZE_INTEGER,
+            "string": cls.SIZE_STRING,
+            "date": cls.SIZE_DATE,
+            "longstring": cls.SIZE_LONGSTRING,
+            "array": cls.SIZE_ARRAY,
+            "object": cls.SIZE_OBJECT,
+            "reference": cls.SIZE_REFERENCE,
+            "unknown": cls.SIZE_UNKNOWN,
+        }
+
     def __init__(self):
         # Core dataset stats (from the homework)
         self.nb_clients = 10**7            # 10 million customers
@@ -21,6 +55,22 @@ class Statistics:
 
         # Infrastructure stats
         self.nb_servers = 1000
+
+    def get_collection_count(self, name: str) -> int:
+        n = name.lower()
+        if n == "client":
+            return self.nb_clients
+        if n == "product":
+            return self.nb_products
+        if n == "orderline":
+            return self.nb_orderlines
+        if n == "warehouse":
+            return self.nb_warehouses
+        if n == "stock":
+            # One stock row per product (even if quantity = 0)
+            return self.nb_products
+        # Default fallback
+        return 0
 
     def describe(self):
         """Print a summary of the statistics."""

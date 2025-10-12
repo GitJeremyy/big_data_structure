@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from services.schema_client import Schema
 from services.statistics import Statistics
+from services.relationships import get_profile
+from services.sizing import Sizer
 
 router = APIRouter()
 
@@ -221,21 +223,23 @@ amazon_sample_schema = """{
 """
 
 @router.get("/bytesCalculator")
-async def calculate_bytes():
+async def calculate_bytes(db_signature: str = Query("DB4", description="DB signature")):
+    # Build core objects
     schema = Schema(amazon_sample_schema)
     stats = Statistics()
+    profile = get_profile(db_signature)  # relationship & collections profile
 
-    result = schema.detect_entities_and_relations()
-
-    # For debugging
+    # Optional: console debug
     stats.describe()
     schema.print_entities_and_relations()
 
-    # Compute collection sizes
-    sizes = schema.compute_collection_sizes(stats)
+    # Relationship-aware sizing
+    sizer = Sizer(schema, profile, stats)
+    sizes = sizer.compute_collection_sizes()
 
     return {
         "message": "Byte calculation successful!",
-        "database_total": sizes["Database_Total"]["total_size_human"],
+        "db_signature": db_signature,
+        "database_total": sizes["Database_Total"]["total_human"],
         "collections": sizes
     }

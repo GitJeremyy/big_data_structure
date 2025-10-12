@@ -1,4 +1,5 @@
 import json
+from services.statistics import Statistics
 
 class Schema:
     def __init__(self, schema_json):
@@ -162,46 +163,6 @@ class Schema:
         
         return None
     
-    # def _detect_relations(self, entities, nested_entities):
-    #     """
-    #     Détecte les relations entre entités basées sur les références et l'imbrication.
-        
-    #     Returns:
-    #         list: Liste des relations détectées
-    #     """
-    #     relations = []
-    #     all_entities = {**entities, **nested_entities}
-        
-    #     for entity_name, entity_info in all_entities.items():
-    #         for attr in entity_info['attributes']:
-    #             # Relation par référence/embedding
-    #             if attr.get('type') == 'reference':
-    #                 ref_to = attr.get('reference_to')
-    #                 if ref_to:
-    #                     relations.append({
-    #                         'from': entity_name,
-    #                         'to': ref_to.capitalize() if ref_to.islower() else ref_to,
-    #                         'type': 'embeds' if attr.get('embedded') else 'references',
-    #                         'attribute': attr['name'],
-    #                         'cardinality': '1:1' if attr.get('required') else '1:0..1'
-    #                     })
-                
-    #             # Relation par array (potentiellement 1:N)
-    #             elif attr.get('type') == 'array':
-    #                 # Si le nom de l'attribut correspond à une entité
-    #                 attr_name = attr['name']
-    #                 potential_entity = attr_name.rstrip('s').capitalize()
-    #                 if potential_entity in all_entities or attr_name.capitalize() in all_entities:
-    #                     relations.append({
-    #                         'from': entity_name,
-    #                         'to': potential_entity if potential_entity in all_entities else attr_name.capitalize(),
-    #                         'type': 'has_many',
-    #                         'attribute': attr['name'],
-    #                         'cardinality': '1:N'
-    #                     })
-        
-    #     return relations
-    
     def print_entities_and_relations(self):
         """
         Affiche de manière formatée les entités et relations détectées.
@@ -225,10 +186,6 @@ class Schema:
                 req = "✓" if attr.get('required') else " "
                 print(f"    [{req}] {attr['name']}: {attr['type']}")
         
-        # print("\n=== RELATIONS ===")
-        # for rel in result['relations']:
-        #     print(f"  {rel['from']} --[{rel['type']}]--> {rel['to']} ({rel['cardinality']}) via '{rel['attribute']}'")
-        
         return result
     
     def estimate_document_size(self, entity):
@@ -236,19 +193,8 @@ class Schema:
         Estimate the average document size (in bytes) for one entity
         based on attribute types, using official approximation rules.
         """
-
-        # official approximate byte sizes
-        type_sizes = {
-            "number": 8,        # integers/floats
-            "integer": 8,
-            "string": 80,       # short string
-            "date": 20,         # ISO-style date string
-            "longstring": 200,  # long text (description, etc.)
-            "array": 12,        # base cost for arrays (plus inner items)
-            "object": 12,       # small nested key-value
-            "reference": 12,    # embedded or referenced object
-            "unknown": 8        # fallback for unknown types
-        }
+        # official approximate byte sizes come from Statistics
+        type_sizes = Statistics.size_map()
 
         total_size = 0
 
