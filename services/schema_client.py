@@ -155,11 +155,11 @@ class Schema:
                     'required': prop_name in required_fields
                 })
 
-                # Detect arrays of objects (like orderLines) → create a nested entity
+                # Detect arrays of objects (like orderLines) -> create a nested entity
                 items = prop_def.get('items', {})
                 if isinstance(items, dict) and 'properties' in items:
                     # Derive a child entity name (singularised & capitalised)
-                    child_name = (prop_name[:-1] if prop_name.endswith('s') else prop_name).capitalize()
+                    child_name = prop_name.capitalize()
                     
                     # Recursively extract that entity as a nested one
                     self._extract_entities_recursive(

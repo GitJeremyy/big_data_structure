@@ -1,354 +1,295 @@
-# Big Data Structure
+# 🧮 Big Data Structure
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![uv](https://img.shields.io/badge/Package_Manager-uv-purple)
 
-## Overview
+A lightweight **FastAPI** tool to **estimate database storage requirements** for different **denormalisation strategies** (DB0–DB5).  
+It models an e-commerce schema (Products, Clients, Orders, etc.) and computes how much space each strategy would take — from fully normalised to fully embedded.
 
-**Big Data Structure** is a FastAPI-based tool for estimating database storage requirements across different denormalization strategies. Given an e-commerce domain schema, it calculates storage footprint for six predefined database layouts (DB0–DB5), ranging from fully normalized to heavily denormalized designs.
+---
 
-Perfect for:
-- Comparing storage costs of different schema designs
-- Understanding denormalization trade-offs
-- Planning database capacity for large-scale systems
-- Validating schema assumptions before implementation
+## 🚀 Quick Start
 
-## Quick Start
-
-### Prerequisites
-- Python 3.13+
-- `uv` (lightweight Python package manager)
-
-### Installation
-
-1. **Clone the repository**
+### 1️⃣ Clone the repository
 ```bash
 git clone <repository-url>
 cd big_data_structure
 ```
 
-2. **Install UV** (if not already installed)
+### 2️⃣ Install dependencies with `uv`
 ```bash
 pip install uv
-```
-
-Or via install script:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-3. **Install dependencies**
-```bash
 uv sync
 ```
 
-4. **Create and activate virtual environment**
-```bash
-uv venv --python 3.13
-.\.venv\Scripts\Activate
-```
-
-5. **Start the API**
+### 3️⃣ Run the API
 ```bash
 uv run fastapi dev app/main.py
 ```
 
-The API will be available at `http://127.0.0.1:8000`
+➡️ The API will start at:  
+**http://127.0.0.1:8000**
 
-**Response Example:**
+Open the interactive docs at:  
+**http://127.0.0.1:8000/docs**
+
+---
+
+## ⚙️ How It Works
+
+When you call:
+```
+GET /bytesCalculator?db_signature=DB5
+```
+
+the app runs this pipeline:
+
+```
+Profile (DB5)
+   ↓
+Schema Parser  → extracts entities, arrays, and nested objects
+   ↓
+Sizer          → applies denormalisation rules (fk, embed_one, embed_many)
+   ↓
+Statistics     → uses dataset constants and type sizes
+   ↓
+Response       → returns per-collection and total database size
+```
+
+---
+
+## 🧩 Example Output
+
 ```json
 {
   "message": "Byte calculation successful!",
-  "db_signature": "DB4",
-  "database_total": "4355.13 GB",
+  "db_signature": "DB5",
+  "database_total": "1049.44 GB (Database_Total)",
   "collections": {
-    "Stock": {
+    "Product": {
       "nb_docs": 100000,
-      "avg_doc_bytes": 104,
-      "total_bytes": 10400000,
-      "total_human": "9.92 MB"
+      "avg_doc_bytes": 11201476,
+      "total_bytes": 1120147600000,
+      "total_human": "1043.22 GB (Product)"
+    },
+    "Stock": {
+      "nb_docs": 20000000,
+      "avg_doc_bytes": 120,
+      "total_bytes": 2400000000,
+      "total_human": "2.24 GB (Stock)"
     },
     "Warehouse": {
       "nb_docs": 200,
       "avg_doc_bytes": 96,
       "total_bytes": 19200,
-      "total_human": "18.75 KB"
-    },
-    "OrderLine": {
-      "nb_docs": 4000000000,
-      "avg_doc_bytes": 1168,
-      "total_bytes": 4672000000000,
-      "total_human": "4351.14 GB"
+      "total_human": "18.75 KB (Warehouse)"
     },
     "Client": {
       "nb_docs": 10000000,
       "avg_doc_bytes": 428,
       "total_bytes": 4280000000,
-      "total_human": "3.99 GB"
+      "total_human": "3.99 GB (Client)"
+    },
+    "Database_Total": {
+      "total_bytes": 1126827619200,
+      "total_human": "1049.44 GB (Database_Total)"
     }
   }
 }
 ```
 
-## Database Profiles
+---
 
-The tool supports six denormalization strategies:
+## 🧠 Core Components
 
-| Profile | Strategy | Use Case |
-|---------|----------|----------|
-| **DB0** | Fully normalized | Highest data integrity, most joins |
-| **DB1** | Product embeds Categories & Supplier | Balance normalization |
-| **DB2** | Product embeds Stock entries | Reduce collection count |
-| **DB3** | Stock embeds Product | Optimize stock queries |
-| **DB4** | OrderLine embeds Product | Fast order retrieval |
-| **DB5** | Product embeds OrderLines | Maximize denormalization |
+### 🧩 `Schema` — Schema Parsing & Entity Detection
+Located in **`services/schema_client.py`**
 
-Choose a profile based on your query patterns and update frequency requirements.
+Handles everything related to understanding the structure of the JSON schema:
+- Detects **entities**, **nested objects**, and **arrays of objects**
+- Classifies attributes by type (`number`, `string`, `date`, `longstring`, `array`, etc.)
+- Estimates intrinsic document size (before relationships)
 
-## Architecture
-
-### System Components
-
-```
-API Request (GET /bytesCalculator?db_signature=DB4)
-    ↓
-[Router] Load profile & schema
-    ↓
-[Schema Parser] Extract entities & relationships
-    ↓
-[Sizer] Calculate relationship-aware sizes
-    ↓
-[Statistics] Apply size constants & multipliers
-    ↓
-JSON Response
-```
-
-### Key Modules
-
-#### `app/main.py` — FastAPI Application
-Initializes the FastAPI app and registers the bytes calculator router.
-
-#### `app/routers/bytesCalculator.py` — API Endpoint
-- **Route**: `http://127.0.0.1:8000/docs#/default/calculate_bytes_bytesCalculator_get`
-- Loads the JSON schema for the specified profile
-- Builds `Schema`, `Statistics`, and denormalization profile
-- Computes sizes using `Sizer`
-- Outputs debug information to console
-
-#### `services/schema_client.py` — Schema Parsing
-Parses JSON Schema and detects entities, nested objects, and attributes.
-
-**Key Functions:**
-- `detect_entities_and_relations()` — Walks schema to identify all entities and their attributes
-- `estimate_document_size(entity, stats)` — Computes average document size using type mappings and heuristics
-- `count_attribute_types(entity)` — Classifies and counts attribute types for validation
-
-**Sizing Heuristics:**
-- Fields named `description` or `comment` → `longstring` (≈200 bytes)
-- Fields containing `date` → `date` type (≈20 bytes)
-- Arrays → `avg_length × item_size` (no base overhead)
-- `categories` field → `avg_categories_per_product` items (default: 2)
-
-#### `services/relationships.py` — Denormalization Profiles
-Defines six `DenormProfile` configurations specifying physical collections and relationship storage:
-
-- `fk` — Stored as numeric foreign key fields (8 bytes each)
-- `embed_one` — Child document embedded once (full size)
-- `embed_many` — Array of child documents (avg_multiplicity × child_size)
-
-#### `services/statistics.py` — Dataset Constants
-Holds dataset-wide counts and byte size mappings.
-
-**Default Counts:**
-- Clients: 10,000,000
-- Products: 100,000
-- OrderLines: 4,000,000,000
-- Warehouses: 200
-
-**Byte Mappings:**
-- `number`, `integer` → 8 bytes
-- `string` → 80 bytes
-- `date` → 20 bytes
-- `longstring` → 200 bytes
-- `object`, `reference` → 12 bytes
-- `array` → 0 bytes (size from items only)
-
-#### `services/sizing.py` — Relationship-Aware Sizing
-Core calculation engine that combines intrinsic entity sizes with relationship storage rules.
-
-**Calculation Flow:**
-1. Compute base entity size from field types
-2. For each relationship:
-   - `fk`: Add 8 bytes per foreign key
-   - `embed_one`: Add full child document size
-   - `embed_many`: Add `avg_multiplicity × child_size`
-3. Multiply by document count to get total collection size
-
-## How Sizing Works
-
-### Intrinsic Field Sizing
-Each field type has a default byte size from `Statistics.size_map()`:
-
-```
-Field Type        | Size      | Notes
-------------------|-----------|-------------------------------------------
-number/integer    | 8 bytes   | Fixed-size numeric
-string            | 80 bytes  | Average string length
-date              | 20 bytes  | Based on field name heuristic
-longstring        | 200 bytes | For "description"/"comment" fields
-object            | 12 bytes  | Small overhead per object
-reference/fk      | 12 bytes  | Foreign key reference
-array             | 0 bytes   | No overhead; sized by items only
-```
-
-### Relationship Storage
-
-**Foreign Key (fk):**
-```
-Product ─fk→ Supplier
-Adds: 8 bytes per product for supplier_id
-```
-
-**Embed One (embed_one):**
-```
-Product { supplier: { IDS, name, ... } }
-Adds: Full supplier document size per product
-```
-
-**Embed Many (embed_many):**
-```
-Prod{[Cat],Supp,[St]} → Prod{[Cat],Supp,[quantity, location, IDW for each of the 200 warehouses]}
-Adds: avg_multiplicity × category_size per product
-```
-
-### Example Calculation
-
-For DB4 with 100,000 products embedded in each of 4 billion OrderLines:
-
-```
-OrderLine size = base_fields + embedded_product_size
-  = 200 bytes + 512 bytes = 712 bytes per OrderLine
-
-Total = 4,000,000,000 OrderLines × 712 bytes = ~2.85 TB
-```
-
-## API Reference
-
-### Get Storage Estimate
-
-**Parameters:**
-- `db_signature` (string, required): Profile name (DB0–DB5)
-
-**Response Fields:**
-- `message` — Status message
-- `db_signature` — Requested profile
-- `database_total` — Human-readable total size
-- `collections` — Object mapping collection name to:
-  - `nb_docs` — Number of documents
-  - `avg_doc_bytes` — Average document size
-  - `total_bytes` — Total storage in bytes
-  - `total_human` — Human-readable total (KB, MB, GB, TB)
-
-**Console Output:**
-After each request, the API prints per-collection type counts to help verify assumptions:
-
-```
-Collection: Product
-  Type Counts: {number: 5, string: 3, date: 2, array: 1, ...}
-```
-
-## Customization
-
-### Adjust Dataset Scale
-
-Edit `services/statistics.py`:
-
+**Key Methods**
 ```python
-class Statistics:
-    nb_clients = 50_000_000        # Increase client count
-    nb_products = 500_000          # More products
-    nb_orderlines = 10_000_000_000 # More orders
-    avg_categories_per_product = 5 # More categories per product
+detect_entities_and_relations()   # Recursively extracts entities and nested entities
+estimate_document_size(entity)    # Estimates average document size based on type heuristics
+count_attribute_types(entity)     # Counts intrinsic types for debug & validation
 ```
 
-### Add Field Heuristics
+**Used for:** establishing the logical model before applying denormalisation.
 
-Modify `services/schema_client.py` in `_classify_attr_type()`:
+---
 
+### ⚙️ `Sizer` — Relationship-Aware Size Calculator  
+Located in **`services/sizing.py`**
+
+Combines intrinsic entity sizes with denormalisation strategies to produce realistic storage estimates.
+
+**Responsibilities**
+- Traverses relationships from a `DenormProfile`
+- Applies `fk`, `embed_one`, or `embed_many` storage rules
+- Recursively computes per-entity and per-collection byte totals
+- Aggregates results into a full database footprint
+
+**Key Methods**
 ```python
-if "category" in field_name.lower():
-    return "category"  # Custom type
+_entity_doc_size(entity_name)     # Core recursive computation of doc size
+_entity_intrinsic_size(name)      # Uses Schema to compute base size
+compute_collection_sizes()        # Multiplies by document counts (from Statistics)
+_entity_type_counts()             # Debug: counts types across embedded structures
 ```
 
-### Create New Denormalization Profile
+**How it fits:** this is the “engine” that merges logical schema + physical storage model.
 
-Add to `services/relationships.py`:
+---
 
+### 📊 `Statistics` — Dataset Constants & Type Sizes  
+Located in **`services/statistics.py`**
+
+Holds all constants and average values used in sizing.
+
+**Contains:**
+- Entity counts (e.g. 10M clients, 4B order lines)
+- Average relationships per entity (e.g. orders per client)
+- Approximate byte mappings for each type
+
+**Example**
+```python
+
+
+self.nb_clients = 10**7            # 10 million customers
+self.nb_products = 10**5           # 100,000 products
+self.nb_orderlines = 4 * 10**9     # 4 billion order lines
+self.nb_warehouses = 200           # 200 warehouses
+```
+
+**Used by:** both `Schema` and `Sizer` for every size computation.
+
+---
+
+### 🧱 `DenormProfile` & `RelationshipSpec` — Database Layout Definitions  
+Located in **`services/relationships.py`**
+
+Define how each database profile (DB0–DB5) physically stores entities and relationships.
+
+**Key Classes**
+```python
+class RelationshipSpec:
+    from_entity: str
+    to_entity: str
+    stored_as: str           # "fk" | "embed_one" | "embed_many"
+    fk_fields: Optional[List[str]] = None
+    avg_multiplicity: Optional[float] = None  # only for embed_many
+
+class DenormProfile:
+    name: str
+    collections: List[str]
+    relationships: List[RelationshipSpec]
+```
+
+**Example (DB5):**
+```python
+RelationshipSpec("Product", "OrderLine", "embed_many", avg_multiplicity=Statistics().nb_orderlines / Statistics().nb_products)
+```
+
+With nb_orderlines = 4,000,000,000 and nb_products = 100,000
+That means: each product embeds 40,000 order lines → heavy denormalisation.
+
+---
+
+### 🧮 `bytesCalculator` API — FastAPI Route  
+Located in **`app/routers/bytesCalculator.py`**
+
+The main entry point for users.  
+- Accepts a query parameter `db_signature` (DB0–DB5)  
+- Loads the JSON schema, denormalisation profile, and statistics  
+- Instantiates `Schema` and `Sizer`, then returns results as JSON
+
+---
+
+## 📦 Denormalisation Profiles
+
+| Profile | Description |
+|----------|--------------|
+| **DB0** | Fully normalised — every table separate |
+| **DB1** | Product embeds Categories & Supplier |
+| **DB2** | Product embeds Stock entries |
+| **DB3** | Stock embeds Product |
+| **DB4** | OrderLine embeds Product |
+| **DB5** | Product embeds OrderLines *(max denormalisation)* |
+
+---
+
+## 🧰 Project Structure
+
+```
+big_data_structure/
+├── app/
+│   ├── main.py                # FastAPI entrypoint
+│   └── routers/
+│       └── bytesCalculator.py # API route
+├── services/
+│   ├── schema_client.py       # Schema parsing
+│   ├── relationships.py       # DB0–DB5 profiles
+│   ├── statistics.py          # Dataset constants
+│   ├── sizing.py              # Relationship-aware size calculator
+│   └── JSON_schema/
+        ├── DB*.json
+│       └── json-schema-DB*.json
+├── pyproject.toml
+└── README.md
+```
+
+## 🔧 Adapting or Extending the Project
+
+### 1️⃣ Changing the Database Signature (e.g. from DB5 to DB6)
+
+When introducing a new **denormalisation profile** or tweaking an existing one:
+
+**Files to modify:**
+| File | Purpose | What to do |
+|------|----------|------------|
+| `services/relationships.py` | Defines all DB profiles | Add a new `DenormProfile` (e.g. `DB6`) or edit relationships |
+| `services/JSON_schema/json-schema-DB*.json` | Schema definitions | Create a matching schema file for the new DB signature |
+| `services/statistics.py` | Dataset constants | Adjust counts or multiplicities (e.g. avg orders per client) if the model logic changes |
+| `app/routers/bytesCalculator.py` | API route logic | Ensure your new profile (e.g. `"DB6"`) is loaded and passed to the Sizer |
+| (Optional) `Schema._extract_entities_recursive()` | Schema parsing | Add special cases if your new schema introduces new object types or naming conventions |
+
+**Typical example (DB6):**
 ```python
 DB6 = DenormProfile(
     name="DB6",
     collections=["Product", "OrderLine", "Client"],
     relationships=[
-        RelationshipSpec(from_entity="Product", to_entity="Stock", storage="embed_many", avg_multiplicity=200),
-        # ... more relationships
+        RelationshipSpec("Product", "Stock", "embed_many", avg_multiplicity=200),
+        RelationshipSpec("OrderLine", "Client", "fk"),
     ]
 )
-
-PROFILES = {
-    # ... existing profiles
-    "DB6": DB6,
-}
+PROFILES["DB6"] = DB6
 ```
 
-## Troubleshooting
+✅ That’s usually all you need for a new variant of your current e-commerce schema.
 
-### Empty Collection Counts
-**Issue**: A collection shows 0 documents.
+---
 
-**Cause**: Naming mismatch between profile definition and schema entity. The sizer uses case-insensitive matching to mitigate this, but verify spelling in `relationships.py`.
+### 2️⃣ Changing to a Completely Different Database or Domain
 
-**Solution**: Check that entity names match between the schema and denormalization profile.
+If you move away from the current **e-commerce** model (Products, Clients, Orders) — e.g. into healthcare, IoT, or financial data — the following must be reconsidered.
 
-### Arrays Appear Too Large/Small
-**Issue**: Array field sizes don't match expectations.
+**Files to revisit:**
 
-**Cause**: Incorrect `avg_*` values in `Statistics` or missing `items.type` in schema.
+| File | Purpose | Required changes |
+|------|----------|------------------|
+| `services/JSON_schema/*.json` | **Schema definition** | Replace with a new JSON schema describing your new domain entities, attributes, and relationships |
+| `services/statistics.py` | **Dataset parameters** | Define new counts (e.g. `nb_patients`, `nb_devices`) and type averages that fit the new data scale |
+| `services/relationships.py` | **DenormProfiles** | Redefine collections and relationships reflecting the new domain logic |
+| `services/schema_client.py` | **Schema parsing rules** | Update heuristics for attribute naming (e.g. `"timestamp"`, `"sensor_id"`, `"value"` instead of `"price"` or `"orderLine"`) |
+| `services/sizing.py` | **Sizer logic** | Optional: adjust byte weighting rules or introduce new relationship storage strategies |
+| `app/routers/bytesCalculator.py` | **API behaviour** | If your endpoint or response format changes, modify accordingly |
+| `tests/` | **Validation tests** | Add new test data and checks for your new schema |
 
-**Solution**: 
-- Verify `avg_categories_per_product` and similar averages in `Statistics`
-- Confirm `items.type` is set for array fields in your JSON Schema
-- Remember: arrays have no base overhead; size is `avg_length × item_size` only
-
-### Embed Many Sizes Seem Wrong
-**Issue**: Embedded array sizes are larger/smaller than expected.
-
-**Cause**: `embed_many` calculates as `avg_multiplicity × child_size` by design (no array overhead).
-
-**Solution**: This is intentional. For DB2 with 100,000 products and avg 200 stock entries per product:
-```
-Stock size per product = avg_multiplicity × child_size
-                       = 200 × 512 bytes = 102.4 KB per product
-Total = 100,000 × 102.4 KB ≈ 10.24 GB
-```
-
-## Development
-
-### Project Structure
-```
-big_data_structure/
-├── app/
-│   ├── main.py                 # FastAPI app
-│   └── routers/
-│       └── bytesCalculator.py  # API endpoint
-├── services/
-│   ├── schema_client.py        # Schema parsing
-│   ├── relationships.py        # Denormalization profiles
-│   ├── statistics.py           # Dataset constants
-│   ├── sizing.py               # Size calculations
-│   └── JSON_schema/            # Profile schemas
-│       ├── json-schema-DB0.json
-│       └── ...
-├── pyproject.toml              # Project config
-└── README.md
-```
+**In short:**  
+If you just add another denormalisation variant → edit **relationships + schema + stats**.  
+If you change the domain entirely → rewrite **schema + statistics + relationships** (and maybe tweak `Schema` logic if new patterns appear).
