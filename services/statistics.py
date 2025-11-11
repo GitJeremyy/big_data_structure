@@ -14,8 +14,8 @@ class Statistics:
     SIZE_DATE = 20
     # long text (description, etc.)
     SIZE_LONGSTRING = 200
-    # base cost for arrays (plus inner items)
-    SIZE_ARRAY = 12
+    # arrays contribute only via their items; no base overhead
+    SIZE_ARRAY = 0
     # small nested key-value
     SIZE_OBJECT = 12
     # embedded or referenced object
@@ -68,7 +68,7 @@ class Statistics:
             return self.nb_warehouses
         if n == "stock":
             # One stock row per product (even if quantity = 0)
-            return self.nb_products
+            return self.nb_products * self.nb_warehouses
         # Default fallback
         return 0
 

@@ -8,6 +8,54 @@ class Schema:
         else:
             self.schema = schema_json
 
+    # ---------------------------------------------
+    # Debug helpers for type classification/counting
+    # ---------------------------------------------
+    def _classify_attr_type(self, attr: dict) -> str:
+        """
+        Map an attribute definition to a logical type label used across the app.
+        Mirrors the heuristics from estimate_document_size so counts match sizing.
+
+        Returns one of: number, integer, string, date, longstring,
+        array, object, reference, unknown.
+        """
+        name = str(attr.get("name", "")).lower()
+        t = attr.get("type", "unknown")
+
+        # Name-based overrides first (as in sizing rules)
+        if "description" in name or "comment" in name:
+            return "longstring"
+        if "date" in name:
+            return "date"
+
+        # Normalize known schema types
+        if t in {"number", "integer", "string", "array", "object", "reference"}:
+            return t
+        return "unknown"
+
+    def count_attribute_types(self, entity: dict) -> dict:
+        """
+        Count intrinsic attribute types for a single entity (no relationships).
+        Returns a dict {type_name: count} using the logical type names.
+        """
+        counts = {
+            "number": 0,
+            "integer": 0,
+            "string": 0,
+            "date": 0,
+            "longstring": 0,
+            "array": 0,
+            "object": 0,
+            "reference": 0,
+            "unknown": 0,
+        }
+
+        for attr in entity.get("attributes", []):
+            t = self._classify_attr_type(attr)
+            counts[t] = counts.get(t, 0) + 1
+
+        return counts
+
     def get_collections(self):
         # Generalize: collections are top-level keys representing entities/relations
         # Heuristic: keys with dict values and at least one field
@@ -143,7 +191,8 @@ class Schema:
                 nested_entities,
                 parent_path=name
             )
-    
+
+    # Not very useful, but keeping it anyway    
     def _identify_primary_key(self, attributes):
         """
         Identifie la clé primaire parmi les attributs.
@@ -188,10 +237,11 @@ class Schema:
         
         return result
     
-    def estimate_document_size(self, entity):
+    def estimate_document_size(self, entity, stats: Statistics | None = None):
         """
         Estimate the average document size (in bytes) for one entity
         based on attribute types, using official approximation rules.
+        Special rule for arrays: size = avg_length * size(one item).
         """
         # official approximate byte sizes come from Statistics
         type_sizes = Statistics.size_map()
@@ -210,6 +260,27 @@ class Schema:
             # Detect "date" fields → date
             elif "date" in name:
                 total_size += type_sizes["date"]
+            # Arrays: depend on what's inside (avg_length * item_size)
+            elif attr_type == "array":
+                items = attr.get("items", {}) or {}
+                item_type = items.get("type")
+
+                # Heuristics if type is not provided in schema (e.g., categories)
+                if not item_type:
+                    if "categories" in name or "tags" in name or "labels" in name:
+                        item_type = "string"
+                    else:
+                        item_type = "unknown"
+
+                # Map item type to a size
+                per_item = type_sizes.get(item_type, type_sizes["unknown"])
+
+                # Choose an average length, when known
+                avg_len = 1
+                if stats is not None and ("categories" in name):
+                    avg_len = int(getattr(stats, "avg_categories_per_product", 1))
+
+                total_size += avg_len * per_item
             # Normal type lookup
             else:
                 total_size += type_sizes.get(attr_type, type_sizes["unknown"])
@@ -245,7 +316,7 @@ class Schema:
             else:
                 nb_docs = 0  # fallback
 
-            avg_size = self.estimate_document_size(entity)
+            avg_size = self.estimate_document_size(entity, stats)
             total_size = nb_docs * avg_size
             total_db_size += total_size
 
@@ -264,12 +335,37 @@ class Schema:
 
         return results
     
-    def _format_bytes(self, size_in_bytes):
+    def _format_bytes(self, size_in_bytes, collection_name: str = ""):
         """
-        Convert bytes into a human-readable format (B, KB, MB, GB, TB).
+        Convert bytes into a human-readable format (B, KB, MB, GB)
+        and include the collection name in the formatted result.
         """
-        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-            if size_in_bytes < 1024:
-                return f"{size_in_bytes:.2f} {unit}"
-            size_in_bytes /= 1024
-        return f"{size_in_bytes:.2f} PB"  # just in case it’s huge
+        # Validate input
+        try:
+            if size_in_bytes is None:
+                print(f"Invalid size None for collection {collection_name}")
+                return f"0.00 GB ({collection_name})" if collection_name else "0.00 GB"
+            print(f"Formatting size: {size_in_bytes} bytes for collection {collection_name}")
+            size = float(size_in_bytes)
+        except (TypeError, ValueError):
+            print(f"Invalid size not a number for collection {collection_name}")
+            return f"0.00 GB ({collection_name})" if collection_name else "0.00 GB"
+
+        # If size is negative, treat as zero
+        if size <= 0:
+            print(f"Invalid size less than or equal to zero for collection {collection_name}")
+            return f"0.00 GB ({collection_name})" if collection_name else "0.00 GB"
+
+        # Units from smallest to GB (GB is the maximum we return)
+        units = ['B', 'KB', 'MB', 'GB']
+        unit_index = 0
+        while size >= 1024 and unit_index < len(units) - 1:
+            size /= 1024.0
+            unit_index += 1
+
+        # Final formatted string
+        human_size = f"{size:.2f} {units[unit_index]}"
+        print(f"Formatted size for collection {collection_name}: {human_size}")
+
+        # Append the collection name for clarity in outputs
+        return f"{human_size} ({collection_name})" if collection_name else human_size

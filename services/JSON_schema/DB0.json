@@ -1,0 +1,67 @@
+{
+    "Categories": {
+        "IDC": 1,
+        "name": "Smartphones",
+        "description": "Devices combining mobile telephone and computing functions into one unit."
+    },
+
+    "Supplier": {
+        "IDS": 1,
+        "name": "Google",
+        "SIRET": "123 456 789 00012",
+        "headOffice": "1600 Amphitheatre Parkway, Mountain View, CA 94043, USA",
+        "Revenue": { 
+            "amount": 257.6, 
+            "currency": "Billion", 
+            "year": 2023 
+        }
+    },
+
+    "Product": {
+        "IDP": 1,
+        "name": "Google Pixel 9",
+        "price": { 
+            "amount": 999.99, 
+            "currency": "EUR", 
+            "VAT": 20 
+        },
+        "brand": "Google",
+        "description": "The Google Pixel 9 is a smartphone developed by Google that features a high-resolution camera.",
+        "image_url": "https://example.com/google_pixel_9.jpg",
+        "category_id": 1,
+        "supplier_id": 1
+    },
+
+    "Stock": {
+        "quantity": 2,
+        "location": "Aisle 3, Shelf B",
+        "product_id": 1,
+        "warehouse_id": 1
+    },
+
+    "Warehouse": {
+        "IDW": 1,
+        "address": "123 Main St, Anytown, USA",
+        "capacity": 1000
+    },
+
+    "OrderLine": {
+        "IDOL": 1,
+        "product_id": 1,
+        "date": "2024-10-01",
+        "quantity": 2,
+        "deliveryDate": "2024-10-05",
+        "comment": "Please deliver between 9 AM and 5 PM",
+        "grade": 5
+    },
+
+    "Client": {
+        "IDC": 1,
+        "ln": "Doe",
+        "fn": "John",
+        "address": "456 Elm St, Othertown, USA",
+        "nationality": "USA",
+        "birthdate": "1990-01-01",
+        "email": "john.doe@example.com"
+    }
+}
