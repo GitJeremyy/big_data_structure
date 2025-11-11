@@ -1,0 +1,263 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "Product": {
+      "type": "object",
+      "properties": {
+        "IDP": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "price": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string",
+              "minLength": 1
+            },
+            "VAT": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "amount",
+            "currency",
+            "VAT"
+          ]
+        },
+        "brand": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "image_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "categories": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "required": [
+              "IDC",
+              "name",
+              "description"
+            ],
+            "properties": {
+              "IDC": {
+                "type": "number"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "supplier": {
+          "type": "object",
+          "properties": {
+            "IDS": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "SIRET": {
+              "type": "string",
+              "minLength": 1
+            },
+            "headOffice": {
+              "type": "string",
+              "minLength": 1
+            },
+            "Revenue": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "year": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "amount",
+                "currency",
+                "year"
+              ]
+            }
+          },
+          "required": [
+            "IDS",
+            "name",
+            "SIRET",
+            "headOffice",
+            "Revenue"
+          ]
+        },
+        "stock": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "required": [
+              "quantity",
+              "location",
+              "warehouse_id"
+            ],
+            "properties": {
+              "quantity": {
+                "type": "number"
+              },
+              "location": {
+                "type": "string",
+                "minLength": 1
+              },
+              "warehouse_id": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "IDP",
+        "name",
+        "price",
+        "brand",
+        "description",
+        "image_url",
+        "categories",
+        "supplier",
+        "stock"
+      ]
+    },
+    "Warehouse": {
+      "type": "object",
+      "properties": {
+        "IDW": {
+          "type": "number"
+        },
+        "address": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capacity": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "IDW",
+        "address",
+        "capacity"
+      ]
+    },
+    "OrderLine": {
+      "type": "object",
+      "properties": {
+        "IDOL": {
+          "type": "number"
+        },
+        "product_id": {
+          "type": "number"
+        },
+        "date": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "deliveryDate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grade": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "IDOL",
+        "product_id",
+        "date",
+        "quantity",
+        "deliveryDate",
+        "comment",
+        "grade"
+      ]
+    },
+    "Client": {
+      "type": "object",
+      "properties": {
+        "IDC": {
+          "type": "number"
+        },
+        "ln": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fn": {
+          "type": "string",
+          "minLength": 1
+        },
+        "address": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nationality": {
+          "type": "string",
+          "minLength": 1
+        },
+        "birthdate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "IDC",
+        "ln",
+        "fn",
+        "address",
+        "nationality",
+        "birthdate",
+        "email"
+      ]
+    }
+  },
+  "required": [
+    "Product",
+    "Warehouse",
+    "OrderLine",
+    "Client"
+  ]
+}
