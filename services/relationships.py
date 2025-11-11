@@ -143,7 +143,7 @@ DB5 = DenormProfile(
     relationships=[
         RelationshipSpec("Product", "Categories", "embed_many", avg_multiplicity=Statistics().avg_categories_per_product),
         RelationshipSpec("Product", "Supplier",   "embed_one"),
-        RelationshipSpec("Product", "OrderLines", "embed_many", avg_multiplicity=Statistics().nb_orderlines / Statistics().nb_products),
+        RelationshipSpec("Product", "OrderLine", "embed_many", avg_multiplicity=Statistics().nb_orderlines / Statistics().nb_products),
 
         RelationshipSpec("OrderLine", "Client",   "fk", fk_fields=["IDC"]),
 
