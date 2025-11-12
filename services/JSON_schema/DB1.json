@@ -12,16 +12,8 @@
         "image_url": "https://example.com/google_pixel_9.jpg",
         
         "categories": [
-            {
-                "IDC": 1,
-                "name": "Smartphones",
-                "description": "Devices combining mobile telephone and computing functions into one unit."
-            },
-            {
-                "IDC": 2,
-                "name": "Electronics",
-                "description": "Consumer electronic products and accessories."
-            }
+            "phone",
+            "smartphone"
         ],
 
         "supplier": {
@@ -40,8 +32,8 @@
     "Stock": {
         "quantity": 2,
         "location": "Aisle 3, Shelf B",
-        "product_id": 1,
-        "warehouse_id": 1
+        "IDP": 1,
+        "IDW": 1
     },
 
     "Warehouse": {

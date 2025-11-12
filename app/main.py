@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from .routers import bytesCalculator
-import os
-import logging
 
 app = FastAPI()
 

@@ -12,16 +12,8 @@
         "image_url": "https://example.com/google_pixel_9.jpg",
 
         "categories": [
-            {
-                "IDC": 1,
-                "name": "Smartphones",
-                "description": "Devices combining mobile telephone and computing functions into one unit."
-            },
-            {
-                "IDC": 2,
-                "name": "Electronics",
-                "description": "Consumer electronic products and accessories."
-            }
+            "phone",
+            "smartphone"
         ],
 
         "supplier": {
@@ -44,7 +36,7 @@
                 "deliveryDate": "2024-10-05",
                 "comment": "Please deliver between 9 AM and 5 PM",
                 "grade": 5,
-                "client_id": 1
+                "IDC": 1
             },
             {
                 "IDOL": 2,
@@ -53,7 +45,7 @@
                 "deliveryDate": "2024-10-18",
                 "comment": "Gift wrap please",
                 "grade": 4,
-                "client_id": 2
+                "IDC": 2
             }
         ]
     },
@@ -61,8 +53,8 @@
     "Stock": {
         "quantity": 7,
         "location": "Aisle 3, Shelf B",
-        "product_id": 1,
-        "warehouse_id": 1
+        "IDP": 1,
+        "IDW": 1
     },
 
     "Warehouse": {

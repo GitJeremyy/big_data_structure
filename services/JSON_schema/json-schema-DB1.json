@@ -47,27 +47,9 @@
         },
         "categories": {
           "type": "array",
-          "uniqueItems": true,
-          "minItems": 1,
           "items": {
-            "required": [
-              "IDC",
-              "name",
-              "description"
-            ],
-            "properties": {
-              "IDC": {
-                "type": "number"
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "description": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
+            "required": [],
+            "properties": {}
           }
         },
         "supplier": {
@@ -139,18 +121,18 @@
           "type": "string",
           "minLength": 1
         },
-        "product_id": {
+        "IDP": {
           "type": "number"
         },
-        "warehouse_id": {
+        "IDW": {
           "type": "number"
         }
       },
       "required": [
         "quantity",
         "location",
-        "product_id",
-        "warehouse_id"
+        "IDP",
+        "IDW"
       ]
     },
     "Warehouse": {

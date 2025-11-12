@@ -47,27 +47,9 @@
         },
         "categories": {
           "type": "array",
-          "uniqueItems": true,
-          "minItems": 1,
           "items": {
-            "required": [
-              "IDC",
-              "name",
-              "description"
-            ],
-            "properties": {
-              "IDC": {
-                "type": "number"
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "description": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
+            "required": [],
+            "properties": {}
           }
         },
         "supplier": {
@@ -125,7 +107,7 @@
             "required": [
               "quantity",
               "location",
-              "warehouse_id"
+              "IDW"
             ],
             "properties": {
               "quantity": {
@@ -135,7 +117,7 @@
                 "type": "string",
                 "minLength": 1
               },
-              "warehouse_id": {
+              "IDW": {
                 "type": "number"
               }
             }
@@ -180,7 +162,7 @@
         "IDOL": {
           "type": "number"
         },
-        "product_id": {
+        "IDP": {
           "type": "number"
         },
         "date": {
@@ -204,7 +186,7 @@
       },
       "required": [
         "IDOL",
-        "product_id",
+        "IDP",
         "date",
         "quantity",
         "deliveryDate",

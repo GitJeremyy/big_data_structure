@@ -6,22 +6,13 @@
     "Categories": {
       "type": "object",
       "properties": {
-        "IDC": {
-          "type": "number"
-        },
-        "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "description": {
+        "title": {
           "type": "string",
           "minLength": 1
         }
       },
       "required": [
-        "IDC",
-        "name",
-        "description"
+        "title"
       ]
     },
     "Supplier": {
@@ -113,10 +104,11 @@
           "type": "string",
           "minLength": 1
         },
-        "category_id": {
-          "type": "number"
+        "title": {
+          "type": "string",
+          "minLength": 1
         },
-        "supplier_id": {
+        "IDS": {
           "type": "number"
         }
       },
@@ -127,8 +119,8 @@
         "brand",
         "description",
         "image_url",
-        "category_id",
-        "supplier_id"
+        "title",
+        "IDS"
       ]
     },
     "Stock": {
@@ -141,18 +133,18 @@
           "type": "string",
           "minLength": 1
         },
-        "product_id": {
+        "IDP": {
           "type": "number"
         },
-        "warehouse_id": {
+        "IDW": {
           "type": "number"
         }
       },
       "required": [
         "quantity",
         "location",
-        "product_id",
-        "warehouse_id"
+        "IDP",
+        "IDW"
       ]
     },
     "Warehouse": {
@@ -181,7 +173,7 @@
         "IDOL": {
           "type": "number"
         },
-        "product_id": {
+        "IDP": {
           "type": "number"
         },
         "date": {
@@ -205,7 +197,7 @@
       },
       "required": [
         "IDOL",
-        "product_id",
+        "IDP",
         "date",
         "quantity",
         "deliveryDate",
