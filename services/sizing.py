@@ -60,8 +60,8 @@ class Sizer:
         Rule: For every REQUIRED attribute, add +12 B for the key.
         Then add the value cost:
         - primitives: Statistics.size_map()
-        - array of primitives: avg_len × size(type)
-        - array of objects:   avg_len × size(child object)
+        - array of primitives: avg_len x size(type)
+        - array of objects:   avg_len x size(child object)
         - embedded object ('reference'): inline child object size
         """
         type_sizes = Statistics.size_map()

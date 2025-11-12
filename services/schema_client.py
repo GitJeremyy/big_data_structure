@@ -70,10 +70,6 @@ class Schema:
                 parent_path=None
             )
 
-        print("Detected entities and nested entities from schema.")
-        print(f"Entities: {list(entities.keys())}")
-        print(f"Nested Entities: {list(nested_entities.keys())}")
-
         return {
             "entities": list(entities.values()),
             "nested_entities": list(nested_entities.values())
