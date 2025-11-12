@@ -2,7 +2,7 @@
     "Stock": {
         "quantity": 2,
         "location": "Aisle 3, Shelf B",
-        "warehouse_id": 1,
+        "IDW": 1,
 
         "product": {
             "IDP": 1,
@@ -17,16 +17,8 @@
             "image_url": "https://example.com/google_pixel_9.jpg",
 
             "categories": [
-                {
-                    "IDC": 1,
-                    "name": "Smartphones",
-                    "description": "Devices combining mobile telephone and computing functions into one unit."
-                },
-                {
-                    "IDC": 2,
-                    "name": "Electronics",
-                    "description": "Consumer electronic products and accessories."
-                }
+                "phone",
+                "smartphone"
             ],
 
             "supplier": {
@@ -51,7 +43,7 @@
 
     "OrderLine": {
         "IDOL": 1,
-        "stock_id": 1,
+        "IDP": 1,
         "date": "2024-10-01",
         "quantity": 2,
         "deliveryDate": "2024-10-05",

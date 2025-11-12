@@ -1,23 +1,33 @@
 from fastapi import APIRouter, Query, HTTPException
 from services.schema_client import Schema
 from services.statistics import Statistics
-from services.relationships import get_profile
 from services.sizing import Sizer
 from pathlib import Path
 
 router = APIRouter()
 
-# Define the valid DB signatures
-VALID_DB_SIGNATURES = [f"DB{i}" for i in range(6)]  # ["DB0", "DB1", ..., "DB5"]
+DB_SIGNATURES = {
+    "DB0": "DB0: Prod, Cat, Supp, St, Wa, OL, Cl",
+    "DB1": "DB1: Prod{[Cat],Supp}, St, Wa, OL, Cl",
+    "DB2": "DB2: Prod{[Cat],Supp,[St]}, Wa, OL, Cl",
+    "DB3": "DB3: St{Prod{[Cat],Supp}}, Wa, OL, Cl",
+    "DB4": "DB4: St, Wa, OL{Prod{[Cat],Supp}},Cl",
+    "DB5": "DB5: Prod{[Cat],Supp,[OL]}, St, Wa, Cl"
+}
+
+VALID_DB_SIGNATURES = list(DB_SIGNATURES.keys())
 
 @router.get("/bytesCalculator")
 async def calculate_bytes(
     db_signature: str = Query(
         "DB4",
-        description="Database signature (choose from DB0-DB5)",
+        description="Select a database signature:\n\n"
+                    + "\n".join([f"- **{k}** → {v}" for k, v in DB_SIGNATURES.items()]),
         enum=VALID_DB_SIGNATURES
     )
 ):
+    print(f"Selected profile: {DB_SIGNATURES[db_signature]}")
+    
     # Ensure the signature is valid (redundant with enum but safe)
     if db_signature not in VALID_DB_SIGNATURES:
         raise HTTPException(status_code=400, detail=f"Invalid DB signature. Must be one of {VALID_DB_SIGNATURES}")
@@ -36,14 +46,13 @@ async def calculate_bytes(
     # Build core objects
     schema = Schema(schema_text)
     stats = Statistics()
-    profile = get_profile(db_signature)  # relationship & collections profile
 
     # Optional debug output
     stats.describe()
     schema.print_entities_and_relations()
 
     # Relationship-aware sizing
-    sizer = Sizer(schema, profile, stats)
+    sizer = Sizer(schema, stats)
     sizes = sizer.compute_collection_sizes()
 
     # Debug: print type counts per entity
@@ -59,6 +68,6 @@ async def calculate_bytes(
     return {
         "message": "Byte calculation successful!",
         "db_signature": db_signature,
-        "database_total": sizes["Database_Total"]["total_human"],
+        "database_total": sizes["Database_Total"]["total_size_human"],
         "collections": sizes
     }
