@@ -55,16 +55,6 @@ async def calculate_bytes(
     sizer = Sizer(schema, stats)
     sizes = sizer.compute_collection_sizes()
 
-    # Debug: print type counts per entity
-    try:
-        type_counts = sizer.debug_type_counts()
-        print("\n=== TYPE COUNTS (per collection) ===")
-        for coll, counts in type_counts.items():
-            compact = ", ".join(f"{k}:{v}" for k, v in counts.items() if v)
-            print(f"{coll}: {compact}")
-    except Exception as e:
-        print(f"Type-count debug failed: {e}")
-
     return {
         "message": "Byte calculation successful!",
         "db_signature": db_signature,
