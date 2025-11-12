@@ -88,3 +88,60 @@ class Statistics:
         print(f"Apple products: {self.nb_apple_products}")
         print(f"Orders distributed over {self.nb_days} days")
         print(f"Servers: {self.nb_servers}")
+    
+    # ============================================================
+    # SHARDING STATISTICS
+    # ============================================================
+
+    def compute_sharding_stats(self):
+        """
+        Compute average document and key distribution across servers
+        for all six sharding strategies from the exercise.
+        Returns a dict but also prints a readable summary.
+        """
+        results = {}
+        nb_servers = self.nb_servers
+
+        combos = [
+            ("Stock", "#IDP", self.nb_products),
+            ("Stock", "#IDW", self.nb_warehouses),
+            ("OrderLine", "#IDC", self.nb_clients),
+            ("OrderLine", "#IDP", self.nb_products),
+            ("Product", "#IDP", self.nb_products),
+            ("Product", "#brand", self.nb_distinct_brands),
+        ]
+
+        print("\n=== SHARDING DISTRIBUTION STATISTICS ===")
+        header = f"{'Collection':<12} {'Shard key':<8} {'Docs/server':>15} {'Keys/server':>15} {'Active servers':>17} {'Docs/active':>15}"
+        print(header)
+        print("-" * len(header))
+
+        for coll, key, nb_keys_total in combos:
+            nb_docs_total = self.get_collection_count(coll)
+            nb_active_servers = min(nb_keys_total, nb_servers)
+
+            # Average distributions
+            docs_per_server = nb_docs_total / nb_servers
+            docs_per_active_server = nb_docs_total / nb_active_servers
+            keys_per_server = max(1, nb_keys_total / nb_active_servers)
+
+            key_name = f"{coll}_{key}"
+
+            results[key_name] = {
+                "collection": coll,
+                "shard_key": key,
+                "nb_docs_total": nb_docs_total,
+                "nb_keys_total": nb_keys_total,
+                "nb_servers_total": nb_servers,
+                "nb_active_servers": nb_active_servers,
+                "docs_per_server": docs_per_server,
+                "docs_per_active_server": docs_per_active_server,
+                "keys_per_server": keys_per_server,
+            }
+
+            print(f"{coll:<12} {key:<8} {docs_per_server:15,.0f} {keys_per_server:15,.2f} {nb_active_servers:17,} {docs_per_active_server:15,.0f}")
+
+        print("-" * len(header))
+        print(f"Total servers available: {nb_servers:,}")
+
+        return results
