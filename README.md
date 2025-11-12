@@ -122,7 +122,7 @@ GET /bytesCalculator?db_signature=DB5
 ### `/shardingStats`
 Compute **document and key distribution** across servers for the six predefined sharding strategies.
 
-**Example Output:**
+**Example Console Output:**
 ```
 === SHARDING DISTRIBUTION STATISTICS ===
 Collection   Shard key     Docs/server     Keys/server    Active servers     Docs/active
@@ -145,7 +145,7 @@ Total servers available: 1,000
 Located in **`services/schema_client.py`**
 
 - Detects entities and nested entities from JSON schemas  
-- Identifies arrays, embedded objects, and attribute types  
+- Identifies arrays, embedded objects, and attribute types
 - Estimates intrinsic document size per entity  
 
 **Key methods:**
@@ -167,7 +167,6 @@ Computes per-document and per-collection sizes using:
 
 **Features**
 - Adds +12 B for required keys  
-- Traverses nested/embedded objects recursively  
 - Multiplies by average multiplicities (categories per product, etc.)
 
 **Key methods**
