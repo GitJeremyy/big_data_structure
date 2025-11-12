@@ -4,8 +4,10 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
 ![uv](https://img.shields.io/badge/Package_Manager-uv-purple)
 
-A lightweight **FastAPI** tool to **estimate database storage requirements** for different **denormalisation strategies** (DB0–DB5).  
-It models an e-commerce schema (Products, Clients, Orders, etc.) and computes how much space each strategy would take — from fully normalised to fully embedded.
+A **FastAPI-based analytical tool** for estimating database storage and distribution characteristics across multiple **denormalisation strategies (DB0–DB5)**.  
+It models a simplified e-commerce system and computes both:
+- The **total storage footprint** of each database design.
+- The **sharding distribution** (docs per server, keys per server) given infrastructure statistics.
 
 ---
 
@@ -17,86 +19,122 @@ git clone <repository-url>
 cd big_data_structure
 ```
 
-### 2️⃣ Install dependencies with `uv`
+### 2️⃣ Install dependencies using [`uv`](https://github.com/astral-sh/uv)
 ```bash
 pip install uv
 uv sync
 ```
 
-### 3️⃣ Run the API
+### 3️⃣ Run the FastAPI application
 ```bash
 uv run fastapi dev app/main.py
 ```
 
-➡️ The API will start at:  
+➡️ The API will be available at:  
 **http://127.0.0.1:8000**
 
-Open the interactive docs at:  
+Open the interactive documentation at:  
 **http://127.0.0.1:8000/docs**
 
 ---
 
-## ⚙️ How It Works
+## 🧩 Endpoints
 
-When you call:
+### `/bytesCalculator`
+Estimate total storage size for a selected database profile (DB0–DB5).
+
+**Example:**
 ```
 GET /bytesCalculator?db_signature=DB5
 ```
 
-the app runs this pipeline:
-
-```
-Profile (DB5)
-   ↓
-Schema Parser  → extracts entities, arrays, and nested objects
-   ↓
-Sizer          → applies denormalisation rules (fk, embed_one, embed_many)
-   ↓
-Statistics     → uses dataset constants and type sizes
-   ↓
-Response       → returns per-collection and total database size
+**Response:**
+```json
+{
+  "message": "Byte calculation successful!",
+  "db_signature": "DB4",
+  "database_total": "5386.28 GB (Database_Total)",
+  "collections": {
+    "Stock": {
+      "nb_docs": 20000000,
+      "avg_doc_bytes": 112,
+      "total_size_bytes": 2240000000,
+      "total_size_human": "2.09 GB (Stock)"
+    },
+    "Warehouse": {
+      "nb_docs": 200,
+      "avg_doc_bytes": 132,
+      "total_size_bytes": 26400,
+      "total_size_human": "25.78 KB (Warehouse)"
+    },
+    "OrderLine": {
+      "nb_docs": 4000000000,
+      "avg_doc_bytes": 1444,
+      "total_size_bytes": 5776000000000,
+      "total_size_human": "5379.32 GB (OrderLine)"
+    },
+    "Client": {
+      "nb_docs": 10000000,
+      "avg_doc_bytes": 512,
+      "total_size_bytes": 5120000000,
+      "total_size_human": "4.77 GB (Client)"
+    },
+    "Categories": {
+      "nb_docs": 0,
+      "avg_doc_bytes": 0,
+      "total_size_bytes": 0,
+      "total_size_human": "0.00 GB (Categories)"
+    },
+    "Product": {
+      "nb_docs": 100000,
+      "avg_doc_bytes": 1116,
+      "total_size_bytes": 111600000,
+      "total_size_human": "106.43 MB (Product)"
+    },
+    "Price": {
+      "nb_docs": 0,
+      "avg_doc_bytes": 132,
+      "total_size_bytes": 0,
+      "total_size_human": "0.00 GB (Price)"
+    },
+    "Supplier": {
+      "nb_docs": 0,
+      "avg_doc_bytes": 440,
+      "total_size_bytes": 0,
+      "total_size_human": "0.00 GB (Supplier)"
+    },
+    "Revenue": {
+      "nb_docs": 0,
+      "avg_doc_bytes": 132,
+      "total_size_bytes": 0,
+      "total_size_human": "0.00 GB (Revenue)"
+    },
+    "Database_Total": {
+      "total_size_bytes": 5783471626400,
+      "total_size_human": "5386.28 GB (Database_Total)"
+    }
+  }
+}
 ```
 
 ---
 
-## 🧩 Example Output
+### `/shardingStats`
+Compute **document and key distribution** across servers for the six predefined sharding strategies.
 
-```json
-{
-  "message": "Byte calculation successful!",
-  "db_signature": "DB5",
-  "database_total": "1049.44 GB (Database_Total)",
-  "collections": {
-    "Product": {
-      "nb_docs": 100000,
-      "avg_doc_bytes": 11201476,
-      "total_bytes": 1120147600000,
-      "total_human": "1043.22 GB (Product)"
-    },
-    "Stock": {
-      "nb_docs": 20000000,
-      "avg_doc_bytes": 120,
-      "total_bytes": 2400000000,
-      "total_human": "2.24 GB (Stock)"
-    },
-    "Warehouse": {
-      "nb_docs": 200,
-      "avg_doc_bytes": 96,
-      "total_bytes": 19200,
-      "total_human": "18.75 KB (Warehouse)"
-    },
-    "Client": {
-      "nb_docs": 10000000,
-      "avg_doc_bytes": 428,
-      "total_bytes": 4280000000,
-      "total_human": "3.99 GB (Client)"
-    },
-    "Database_Total": {
-      "total_bytes": 1126827619200,
-      "total_human": "1049.44 GB (Database_Total)"
-    }
-  }
-}
+**Example Output:**
+```
+=== SHARDING DISTRIBUTION STATISTICS ===
+Collection   Shard key     Docs/server     Keys/server    Active servers     Docs/active
+----------------------------------------------------------------------------------------
+Stock        #IDP              20,000          100.00             1,000          20,000
+Stock        #IDW              20,000            1.00               200         100,000
+OrderLine    #IDC           4,000,000       10,000.00             1,000       4,000,000
+OrderLine    #IDP           4,000,000          100.00             1,000       4,000,000
+Product      #IDP                 100          100.00             1,000             100
+Product      #brand               100            5.00             1,000             100
+----------------------------------------------------------------------------------------
+Total servers available: 1,000
 ```
 
 ---
@@ -106,190 +144,117 @@ Response       → returns per-collection and total database size
 ### 🧩 `Schema` — Schema Parsing & Entity Detection
 Located in **`services/schema_client.py`**
 
-Handles everything related to understanding the structure of the JSON schema:
-- Detects **entities**, **nested objects**, and **arrays of objects**
-- Classifies attributes by type (`number`, `string`, `date`, `longstring`, `array`, etc.)
-- Estimates intrinsic document size (before relationships)
+- Detects entities and nested entities from JSON schemas  
+- Identifies arrays, embedded objects, and attribute types  
+- Estimates intrinsic document size per entity  
 
-**Key Methods**
+**Key methods:**
 ```python
-detect_entities_and_relations()   # Recursively extracts entities and nested entities
-estimate_document_size(entity)    # Estimates average document size based on type heuristics
-count_attribute_types(entity)     # Counts intrinsic types for debug & validation
+detect_entities_and_relations()
+_classify_attr_type(attr)
+count_attribute_types(entity)
+print_entities_and_relations()
 ```
-
-**Used for:** establishing the logical model before applying denormalisation.
 
 ---
 
-### ⚙️ `Sizer` — Relationship-Aware Size Calculator  
+### ⚙️ `Sizer` — Schema-Based Size Estimator
 Located in **`services/sizing.py`**
 
-Combines intrinsic entity sizes with denormalisation strategies to produce realistic storage estimates.
+Computes per-document and per-collection sizes using:
+- Schema structure (fields, embedded docs, arrays)
+- Dataset statistics (e.g. number of products, warehouses)
 
-**Responsibilities**
-- Traverses relationships from a `DenormProfile`
-- Applies `fk`, `embed_one`, or `embed_many` storage rules
-- Recursively computes per-entity and per-collection byte totals
-- Aggregates results into a full database footprint
+**Features**
+- Adds +12 B for required keys  
+- Traverses nested/embedded objects recursively  
+- Multiplies by average multiplicities (categories per product, etc.)
 
-**Key Methods**
+**Key methods**
 ```python
-_entity_doc_size(entity_name)     # Core recursive computation of doc size
-_entity_intrinsic_size(name)      # Uses Schema to compute base size
-compute_collection_sizes()        # Multiplies by document counts (from Statistics)
-_entity_type_counts()             # Debug: counts types across embedded structures
+estimate_document_size(entity)
+compute_collection_sizes()
 ```
-
-**How it fits:** this is the “engine” that merges logical schema + physical storage model.
 
 ---
 
-### 📊 `Statistics` — Dataset Constants & Type Sizes  
+### 📊 `Statistics` — Dataset & Sharding Model
 Located in **`services/statistics.py`**
 
-Holds all constants and average values used in sizing.
+Centralises:
+- Dataset constants (e.g. 10 M clients, 4 B order lines)
+- Byte-size mappings per type  
+- Infrastructure setup (1 000 servers)
+- Sharding distribution computation  
 
-**Contains:**
-- Entity counts (e.g. 10M clients, 4B order lines)
-- Average relationships per entity (e.g. orders per client)
-- Approximate byte mappings for each type
-
-**Example**
+**Key methods**
 ```python
-
-
-self.nb_clients = 10**7            # 10 million customers
-self.nb_products = 10**5           # 100,000 products
-self.nb_orderlines = 4 * 10**9     # 4 billion order lines
-self.nb_warehouses = 200           # 200 warehouses
+get_collection_count(name)
+compute_sharding_stats()
 ```
-
-**Used by:** both `Schema` and `Sizer` for every size computation.
 
 ---
 
-### 🧱 `DenormProfile` & `RelationshipSpec` — Database Layout Definitions  
-Located in **`services/relationships.py`**
-
-Define how each database profile (DB0–DB5) physically stores entities and relationships.
-
-**Key Classes**
-```python
-class RelationshipSpec:
-    from_entity: str
-    to_entity: str
-    stored_as: str           # "fk" | "embed_one" | "embed_many"
-    fk_fields: Optional[List[str]] = None
-    avg_multiplicity: Optional[float] = None  # only for embed_many
-
-class DenormProfile:
-    name: str
-    collections: List[str]
-    relationships: List[RelationshipSpec]
-```
-
-**Example (DB5):**
-```python
-RelationshipSpec("Product", "OrderLine", "embed_many", avg_multiplicity=Statistics().nb_orderlines / Statistics().nb_products)
-```
-
-With nb_orderlines = 4,000,000,000 and nb_products = 100,000
-That means: each product embeds 40,000 order lines → heavy denormalisation.
-
----
-
-### 🧮 `bytesCalculator` API — FastAPI Route  
+### 🌐 `bytesCalculator` API
 Located in **`app/routers/bytesCalculator.py`**
 
-The main entry point for users.  
-- Accepts a query parameter `db_signature` (DB0–DB5)  
-- Loads the JSON schema, denormalisation profile, and statistics  
-- Instantiates `Schema` and `Sizer`, then returns results as JSON
+Provides two REST endpoints:
+- `/bytesCalculator` → storage estimation by DB signature  
+- `/shardingStats` → sharding statistics across servers  
+
+**Automatically loads:**
+- JSON schema (`json-schema-DBx.json`)
+- Dataset stats
+- Entity parser and Sizer
 
 ---
 
-## 📦 Denormalisation Profiles
-
-| Profile | Description |
-|----------|--------------|
-| **DB0** | Fully normalised — every table separate |
-| **DB1** | Product embeds Categories & Supplier |
-| **DB2** | Product embeds Stock entries |
-| **DB3** | Stock embeds Product |
-| **DB4** | OrderLine embeds Product |
-| **DB5** | Product embeds OrderLines *(max denormalisation)* |
-
----
-
-## 🧰 Project Structure
+## 📦 Project Structure
 
 ```
 big_data_structure/
 ├── app/
-│   ├── main.py                # FastAPI entrypoint
+│   ├── main.py
 │   └── routers/
-│       └── bytesCalculator.py # API route
+│       └── bytesCalculator.py
 ├── services/
-│   ├── schema_client.py       # Schema parsing
-│   ├── relationships.py       # DB0–DB5 profiles
-│   ├── statistics.py          # Dataset constants
-│   ├── sizing.py              # Relationship-aware size calculator
+│   ├── schema_client.py
+│   ├── sizing.py
+│   ├── statistics.py
 │   └── JSON_schema/
-        ├── DB*.json
-│       └── json-schema-DB*.json
+│       ├── json-schema-DB0.json
+│       ├── json-schema-DB1.json
+│       ├── json-schema-DB2.json
+│       ├── json-schema-DB3.json
+│       ├── json-schema-DB4.json
+│       └── json-schema-DB5.json
 ├── pyproject.toml
 └── README.md
 ```
 
-## 🔧 Adapting or Extending the Project
+---
 
-### 1️⃣ Changing the Database Signature (e.g. from DB5 to DB6)
+## 🧰 Extending the Project
 
-When introducing a new **denormalisation profile** or tweaking an existing one:
+To add a **new database variant (DB6)**:
+1. Create a new JSON schema in `services/JSON_schema/` (e.g. `json-schema-DB6.json`)  
+2. Add its signature to `DB_SIGNATURES` in `bytesCalculator.py`  
+3. The system auto-detects entities and computes new sizes dynamically  
 
-**Files to modify:**
-| File | Purpose | What to do |
-|------|----------|------------|
-| `services/relationships.py` | Defines all DB profiles | Add a new `DenormProfile` (e.g. `DB6`) or edit relationships |
-| `services/JSON_schema/json-schema-DB*.json` | Schema definitions | Create a matching schema file for the new DB signature |
-| `services/statistics.py` | Dataset constants | Adjust counts or multiplicities (e.g. avg orders per client) if the model logic changes |
-| `app/routers/bytesCalculator.py` | API route logic | Ensure your new profile (e.g. `"DB6"`) is loaded and passed to the Sizer |
-| (Optional) `Schema._extract_entities_recursive()` | Schema parsing | Add special cases if your new schema introduces new object types or naming conventions |
-
-**Typical example (DB6):**
-```python
-DB6 = DenormProfile(
-    name="DB6",
-    collections=["Product", "OrderLine", "Client"],
-    relationships=[
-        RelationshipSpec("Product", "Stock", "embed_many", avg_multiplicity=200),
-        RelationshipSpec("OrderLine", "Client", "fk"),
-    ]
-)
-PROFILES["DB6"] = DB6
-```
-
-✅ That’s usually all you need for a new variant of your current e-commerce schema.
+To adjust **sharding scenarios**:
+- Change parameters in `Statistics` (e.g. `nb_servers`, `nb_clients`)  
+- Call `/shardingStats` to see new distribution results  
 
 ---
 
-### 2️⃣ Changing to a Completely Different Database or Domain
+## 🧮 Summary
 
-If you move away from the current **e-commerce** model (Products, Clients, Orders) — e.g. into healthcare, IoT, or financial data — the following must be reconsidered.
+| Feature | Description |
+|----------|--------------|
+| **Storage estimation** | Computes total DB size (B, KB, MB, GB) |
+| **Schema-driven** | Infers structure directly from JSON schemas |
+| **Sharding statistics** | Calculates key and document distribution |
+| **Fast & lightweight** | No external DB, just FastAPI + Python |
+| **Fully extensible** | Add new DB signatures or adjust dataset scales |
 
-**Files to revisit:**
-
-| File | Purpose | Required changes |
-|------|----------|------------------|
-| `services/JSON_schema/*.json` | **Schema definition** | Replace with a new JSON schema describing your new domain entities, attributes, and relationships |
-| `services/statistics.py` | **Dataset parameters** | Define new counts (e.g. `nb_patients`, `nb_devices`) and type averages that fit the new data scale |
-| `services/relationships.py` | **DenormProfiles** | Redefine collections and relationships reflecting the new domain logic |
-| `services/schema_client.py` | **Schema parsing rules** | Update heuristics for attribute naming (e.g. `"timestamp"`, `"sensor_id"`, `"value"` instead of `"price"` or `"orderLine"`) |
-| `services/sizing.py` | **Sizer logic** | Optional: adjust byte weighting rules or introduce new relationship storage strategies |
-| `app/routers/bytesCalculator.py` | **API behaviour** | If your endpoint or response format changes, modify accordingly |
-| `tests/` | **Validation tests** | Add new test data and checks for your new schema |
-
-**In short:**  
-If you just add another denormalisation variant → edit **relationships + schema + stats**.  
-If you change the domain entirely → rewrite **schema + statistics + relationships** (and maybe tweak `Schema` logic if new patterns appear).
+---
