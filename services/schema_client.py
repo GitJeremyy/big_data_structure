@@ -28,31 +28,6 @@ class Schema:
 
         return "unknown"
 
-    def count_attribute_types(self, entity: dict) -> dict:
-        """
-        Count intrinsic attribute types for a single entity.
-        """
-        counts = {t: 0 for t in [
-            "number", "integer", "string", "date", "longstring",
-            "array", "object", "reference", "unknown"
-        ]}
-
-        for attr in entity.get("attributes", []):
-            counts[self._classify_attr_type(attr)] += 1
-
-        print(f"Attribute type counts for {entity.get('name', 'unknown')}: {counts}")
-
-        return counts
-
-    def get_collections(self):
-        """
-        Return top-level collections (entities) from schema.
-        """
-        return [
-            key for key, value in self.schema.items()
-            if isinstance(value, dict) and len(value) > 0
-        ]
-
     def detect_entities_and_relations(self):
         """
         Detect entities and nested entities in a JSON schema.
