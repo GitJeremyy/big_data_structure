@@ -43,7 +43,6 @@
     },
 
     "OrderLine": {
-        "IDOL": 1,
         "product_id": 1,
         "date": "2024-10-01",
         "quantity": 2,

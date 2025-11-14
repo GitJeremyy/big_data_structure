@@ -105,7 +105,6 @@
           "minItems": 1,
           "items": {
             "required": [
-              "IDOL",
               "date",
               "quantity",
               "deliveryDate",
@@ -114,9 +113,6 @@
               "IDC"
             ],
             "properties": {
-              "IDOL": {
-                "type": "number"
-              },
               "date": {
                 "type": "string",
                 "minLength": 1

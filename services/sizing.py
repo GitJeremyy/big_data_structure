@@ -51,6 +51,7 @@ class Sizer:
             # Avoid div-by-zero just in case.
             prods = max(1, int(getattr(self.stats, "nb_products", 1)))
             ols = int(getattr(self.stats, "nb_orderlines", 0))
+            r=ols // prods
             return max(0, ols // prods)
         return 1
 
@@ -137,11 +138,20 @@ class Sizer:
         results = {}
         total_db_size = 0
 
+        # Get the entity-relation structure to identify nested entities
+        er = self.schema.detect_entities_and_relations()
+        nested_entity_names = {e["name"] for e in er["nested_entities"]}
+
         for name, entity in self.entities.items():
+            # Skip nested entities - they're already counted in their parent's size
+            if name in nested_entity_names:
+                continue
+
             # Estimate number of documents per collection
             nb_docs = self.stats.get_collection_count(name)
             avg_size = self.estimate_document_size(entity)
             total_size = nb_docs * avg_size
+            # print(f"Estimated size for collection {name}: {nb_docs} docs x {avg_size} B/doc = {total_size} B")
             total_db_size += total_size
 
             results[name] = {

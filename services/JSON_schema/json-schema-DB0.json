@@ -170,9 +170,6 @@
     "OrderLine": {
       "type": "object",
       "properties": {
-        "IDOL": {
-          "type": "number"
-        },
         "IDP": {
           "type": "number"
         },
@@ -196,7 +193,6 @@
         }
       },
       "required": [
-        "IDOL",
         "IDP",
         "date",
         "quantity",

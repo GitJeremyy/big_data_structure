@@ -158,9 +158,6 @@
     "OrderLine": {
       "type": "object",
       "properties": {
-        "IDOL": {
-          "type": "number"
-        },
         "product_id": {
           "type": "number"
         },
@@ -184,7 +181,6 @@
         }
       },
       "required": [
-        "IDOL",
         "product_id",
         "date",
         "quantity",
