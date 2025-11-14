@@ -71,6 +71,7 @@ class Schema:
             # Embedded object (nested entity)
             if prop_type == "object" and "properties" in prop_def:
                 nested_objects.append((prop_name, prop_def))
+                # print(f"Detected nested entity: {prop_name} /{prop_def} inside {name}")
                 attributes.append({
                     "name": prop_name,
                     "type": "reference",
@@ -78,14 +79,8 @@ class Schema:
                     "required": prop_name in required_fields,
                     "embedded": True
                 })
-            elif prop_type == "object":
-                attributes.append({
-                    "name": prop_name,
-                    "type": "object",
-                    "required": prop_name in required_fields,
-                    "structure": prop_def
-                })
             elif prop_type == "array":
+                # print(f"Detected array attribute: {prop_name} /{prop_def} inside {name}")
                 attributes.append({
                     "name": prop_name,
                     "type": "array",
@@ -127,6 +122,7 @@ class Schema:
         # Handle nested objects
         for nested_name, nested_def in nested_objects:
             entity_name = nested_name.capitalize() if nested_name.islower() else nested_name
+            # print(f"Recursing into nested entity: {entity_name} inside {name}")
             self._extract_entities_recursive(
                 entity_name,
                 nested_def,
