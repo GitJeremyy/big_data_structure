@@ -3,6 +3,7 @@ from services.schema_client import Schema
 from services.statistics import Statistics
 from services.sizing import Sizer
 from pathlib import Path
+import json
 
 router = APIRouter()
 
@@ -16,6 +17,58 @@ DB_SIGNATURES = {
 }
 
 VALID_DB_SIGNATURES = list(DB_SIGNATURES.keys())
+
+
+# ============================================================
+# HELPER FUNCTION TO SAVE RESULTS
+# ============================================================
+def save_results_to_json(db_signature: str, sizes: dict):
+    """
+    Save the computed collection sizes to results_TD1.json.
+    Updates or creates the file with results for each DB signature.
+    """
+    results_path = Path(__file__).resolve().parents[2] / 'services' / 'results_TD1.json'
+    
+    # Load existing results if file exists
+    if results_path.exists():
+        try:
+            with open(results_path, 'r', encoding='utf-8') as f:
+                all_results = json.load(f)
+        except json.JSONDecodeError:
+            all_results = {}
+    else:
+        all_results = {}
+    
+    # Prepare the collection data for this DB signature
+    collections_data = []
+    for coll_name, coll_info in sizes.items():
+        if coll_name == "Database_Total":
+            continue  # Skip the total, we'll add it separately
+        
+        # Extract the collection size in human-readable format
+        total_size_human = coll_info.get("total_size_human", "0 B")
+        # Remove the collection name from the human-readable size if present
+        size_only = total_size_human.split(" (")[0] if " (" in total_size_human else total_size_human
+        
+        collections_data.append({
+            "collection": coll_name,
+            "doc_size_bytes": coll_info.get("avg_doc_bytes", 0),
+            "num_docs": coll_info.get("nb_docs", 0),
+            "collection_size": size_only
+        })
+    
+    # Update the results for this DB signature
+    all_results[db_signature] = {
+        "description": DB_SIGNATURES[db_signature],
+        "database_total": sizes["Database_Total"]["total_size_human"].split(" (")[0],
+        "collections": collections_data
+    }
+    
+    # Save back to file
+    with open(results_path, 'w', encoding='utf-8') as f:
+        json.dump(all_results, f, indent=2, ensure_ascii=False)
+    
+    print(f"✓ Results saved to {results_path}")
 
 
 # ============================================================
@@ -55,6 +108,9 @@ async def calculate_bytes(
     # Compute collection sizes
     sizer = Sizer(schema, stats)
     sizes = sizer.compute_collection_sizes()
+
+    # Save results to JSON file
+    save_results_to_json(db_signature, sizes)
 
     return {
         "message": "Byte calculation successful!",

@@ -1,0 +1,166 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+
+\title{Formulas for Cost Modeling in Distributed Databases}
+
+\section{Cost Model Formulas}
+
+\subsection{Time Cost}
+
+The total execution time of all queries is given by:
+\[
+\text{time}_{DB}
+=
+\sum_{q=1}^{Q}
+\left(
+\frac{\text{vol}_{network}(q)}{\text{bandwidth}_{network}}
++
+\frac{\text{vol}_{RAM}(q)}{\text{bandwidth}_{RAM}}
+\right)
+\times freq(q)
+\]
+
+\subsubsection{Communication Volume}
+
+\paragraph{Filter queries}
+\[
+\text{vol}_{network}(q)
+=
+S \cdot size_{query}
++
+res_q \cdot size_{msg}
+\]
+
+\paragraph{Aggregate queries}
+\[
+\text{vol}_{network}(q)
+=
+S \cdot size_{query}
++
+shuffle \cdot size_{msg}
++
+res_q \cdot size_{msg}
+\]
+
+\subsubsection{RAM Volume}
+\[
+\text{vol}_{RAM}(q,n)
+=
+index_q
++
+sel_{att} \cdot coll_{q,n} \cdot size_{doc}(q)
+\]
+
+The global RAM volume processed is:
+\[
+\text{vol}_{RAM}(q)
+=
+\max\left(
+\text{vol}_{RAM}(q,1),\dots,\text{vol}_{RAM}(q,n)
+\right)
+\]
+
+\subsection{Environmental Cost}
+
+\subsubsection{Network Carbon Impact}
+\[
+impact_{network}(q)
+=
+\text{vol}_{network}(q) \times CO2_{network}
+\]
+
+\subsubsection{RAM/CPU Carbon Impact}
+\[
+impact_{RAM}(q)
+=
+\text{vol}_{RAM}(q) \times CO2_{RAM}
+\]
+
+\subsubsection{Total Environmental Impact}
+\[
+impact(DB)
+=
+\sum_{q=1}^{Q}
+\left(
+impact_{network}(q)
++
+impact_{RAM}(q)
+\right)
+\times freq(q)
+\]
+
+\subsection{Financial Cost}
+
+\subsubsection{Monthly Price}
+\[
+price_{DB}
+=
+price_s \cdot 
+\max\left(
+\frac{vol_{DB} \cdot 3}{capacity_{storage}},
+\frac{vol_{DB}}{capacity_{RAM}} \cdot 2
+\right)
++
+externalFees
+\cdot
+\sum_{q=1}^{Q}
+vol_{external}(q)\cdot freq(q)
+\]
+
+\section{Sharding, Indexes, and Algorithms}
+
+\subsection{When to Use Sharding}
+
+\begin{itemize}
+    \item Use sharding when the dataset does not fit on a single server.
+    \item Use sharding when the main queries filter on the sharding key.
+    \item Avoid sharding when most queries filter on non-shard attributes.
+\end{itemize}
+
+\subsubsection{Data Access Cost}
+\[
+S =
+\begin{cases}
+1 & \text{if filtering on the sharding key} \\
+\#shards & \text{otherwise}
+\end{cases}
+\]
+
+\subsection{When to Use Indexes}
+
+\begin{itemize}
+    \item Use an index when selectivity is medium or high.
+    \item Use an index for frequent reads on the attribute.
+    \item Avoid indexes when selectivity is low or for heavy write workloads.
+\end{itemize}
+
+\subsection{Choice of Algorithm}
+
+\subsubsection{Index Lookup}
+Use when filtering on an indexed attribute:
+\[
+\text{vol}_{RAM}(q)
+=
+index_q + sel_{att} \cdot coll \cdot size_{doc}
+\]
+
+\subsubsection{Full Scan}
+Use when no index exists or selectivity is high:
+\[
+sel_{att} = 1
+\]
+
+\subsubsection{Nested Loop Join}
+(Only for completeness; NoSQL systems avoid joins.)
+\[
+cost
+=
+(S + C1')
++
+C1' \times (S + C2')
+\]
+
+\end{document}
