@@ -1,20 +1,133 @@
-\documentclass{article}
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+\title{Cost Model Formulas for Distributed NoSQL Databases}
+\author{ARROUET--LE BRIGNONEN Aubin, BAUZIN Jérémy et AUPERIN Hugo}
+\date{}
+
 \begin{document}
+\maketitle
 
-\title{Formulas for Cost Modeling in Distributed Databases}
+\section{Query Size (Input \& Output)}
 
-\section{Cost Model Formulas}
+In this course, the size of a query is modeled as the size of the JSON-like object
+sent to the servers. It includes:
+\begin{itemize}
+    \item Filter fields (key + value),
+    \item Projected fields (key + boolean/int),
+    \item A key overhead of $12$ bytes per key,
+    \item An additional $12$ bytes for each nested object level.
+\end{itemize}
 
-\subsection{Time Cost}
+\subsection{Value Sizes}
+\[
+\text{int/boolean} = 8\text{ B}, \quad
+\text{string} = 80\text{ B}, \quad
+\text{date} = 20\text{ B}, \quad
+\text{key overhead} = 12\text{ B}
+\]
 
-The total execution time of all queries is given by:
+\subsection{Query Input Size}
+If the query contains $k$ fields with values $v_i$:
+\[
+\text{size}_{input}
+=
+\sum_{i=1}^{k}
+\left(
+12 + \text{size}(v_i)
+\right)
++ 12 \cdot (\text{nesting levels})
+\]
+
+\subsection{Query Output Size}
+If each output document contains $m$ fields:
+\[
+\text{size}_{msg}
+=
+\sum_{j=1}^{m}
+\left(12 + \text{size}(value_j)\right)
+\]
+
+Total output volume:
+\[
+\text{vol}_{output}(q) = res_q \cdot \text{size}_{msg}
+\]
+
+\subsection{Example: Query Q1}
+
+Consider the query:
+\[
+\texttt{SELECT S.quantity, S.location FROM Stock S WHERE S.IDP = \$IDP \text{ AND } S.IDW = \$IDW;}
+\]
+
+We assume the following:
+\begin{itemize}
+    \item \texttt{IDP} is an integer ($8$ B),
+    \item \texttt{IDW} is an integer ($8$ B),
+    \item \texttt{quantity} is projected and modeled as a boolean/int ($8$ B),
+    \item \texttt{location} is projected and modeled as a boolean/int ($8$ B),
+    \item Each field contributes a key overhead of $12$ B,
+    \item The query is wrapped in a \texttt{Stock} object, adding one extra key of $12$ B.
+\end{itemize}
+
+\subsubsection*{Input Size Calculation}
+
+Value sizes:
+\[
+8 + 8 + 8 + 8 = 32\text{ B}
+\]
+
+Key sizes:
+\[
+4 \times 12 = 48\text{ B}
+\]
+
+Nesting overhead:
+\[
+12\text{ B}
+\]
+
+Total input size:
+\[
+\text{size}_{input}
+= 32 + 48 + 12
+= 92\text{ B}
+\]
+
+\subsubsection*{Output Message Size}
+
+Fields returned:
+\begin{itemize}
+    \item \texttt{quantity}: $12 + 8$ B,
+    \item \texttt{location}: $12 + 8$ B.
+\end{itemize}
+
+Thus:
+\[
+\text{size}_{msg}
+= (12 + 8) + (12 + 8)
+= 40\text{ B}
+\]
+
+Total output volume for $res_q$ results:
+\[
+\text{vol}_{output}(q) = res_q \cdot 40\text{ B}
+\]
+
+\section{Time Cost}
+
+Total execution time:
 \[
 \text{time}_{DB}
 =
-\sum_{q=1}^{Q}
+\sum_{q=1}^Q
 \left(
 \frac{\text{vol}_{network}(q)}{\text{bandwidth}_{network}}
 +
@@ -23,29 +136,31 @@ The total execution time of all queries is given by:
 \times freq(q)
 \]
 
-\subsubsection{Communication Volume}
+\subsection{Network Volume}
 
 \paragraph{Filter queries}
 \[
 \text{vol}_{network}(q)
 =
-S \cdot size_{query}
+S \cdot \text{size}_{input}
 +
-res_q \cdot size_{msg}
+res_q \cdot \text{size}_{msg}
 \]
 
 \paragraph{Aggregate queries}
 \[
 \text{vol}_{network}(q)
 =
-S \cdot size_{query}
+S \cdot \text{size}_{input}
 +
-shuffle \cdot size_{msg}
+shuffle \cdot \text{size}_{msg}
 +
-res_q \cdot size_{msg}
+res_q \cdot \text{size}_{msg}
 \]
 
-\subsubsection{RAM Volume}
+\subsection{RAM Volume}
+
+Per server:
 \[
 \text{vol}_{RAM}(q,n)
 =
@@ -54,36 +169,34 @@ index_q
 sel_{att} \cdot coll_{q,n} \cdot size_{doc}(q)
 \]
 
-The global RAM volume processed is:
+Global:
 \[
 \text{vol}_{RAM}(q)
 =
-\max\left(
-\text{vol}_{RAM}(q,1),\dots,\text{vol}_{RAM}(q,n)
-\right)
+\max_n \left(\text{vol}_{RAM}(q,n)\right)
 \]
 
-\subsection{Environmental Cost}
+\section{Environmental Cost}
 
-\subsubsection{Network Carbon Impact}
+\subsection{Carbon from Network}
 \[
 impact_{network}(q)
 =
-\text{vol}_{network}(q) \times CO2_{network}
+\text{vol}_{network}(q) \cdot CO2_{network}
 \]
 
-\subsubsection{RAM/CPU Carbon Impact}
+\subsection{Carbon from RAM}
 \[
 impact_{RAM}(q)
 =
-\text{vol}_{RAM}(q) \times CO2_{RAM}
+\text{vol}_{RAM}(q) \cdot CO2_{RAM}
 \]
 
-\subsubsection{Total Environmental Impact}
+\subsection{Total Carbon Footprint}
 \[
 impact(DB)
 =
-\sum_{q=1}^{Q}
+\sum_{q=1}^Q
 \left(
 impact_{network}(q)
 +
@@ -92,9 +205,9 @@ impact_{RAM}(q)
 \times freq(q)
 \]
 
-\subsection{Financial Cost}
+\section{Financial Cost}
 
-\subsubsection{Monthly Price}
+\subsection{Monthly Price}
 \[
 price_{DB}
 =
@@ -110,57 +223,45 @@ externalFees
 vol_{external}(q)\cdot freq(q)
 \]
 
-\section{Sharding, Indexes, and Algorithms}
+\section{Sharding and Indexing Strategy}
 
-\subsection{When to Use Sharding}
+\subsection{Sharding}
 
-\begin{itemize}
-    \item Use sharding when the dataset does not fit on a single server.
-    \item Use sharding when the main queries filter on the sharding key.
-    \item Avoid sharding when most queries filter on non-shard attributes.
-\end{itemize}
-
-\subsubsection{Data Access Cost}
 \[
 S =
 \begin{cases}
-1 & \text{if filtering on the sharding key} \\
+1 & \text{if filtered on the sharding key} \\
 \#shards & \text{otherwise}
 \end{cases}
 \]
 
-\subsection{When to Use Indexes}
-
+\subsection{When to Use Sharding}
 \begin{itemize}
-    \item Use an index when selectivity is medium or high.
-    \item Use an index for frequent reads on the attribute.
-    \item Avoid indexes when selectivity is low or for heavy write workloads.
+    \item Dataset too large for one server.
+    \item Queries often filter on the sharding key.
 \end{itemize}
 
-\subsection{Choice of Algorithm}
+\subsection{When to Avoid Sharding}
+\begin{itemize}
+    \item Queries mostly filter on non-sharding attributes.
+    \item Aggregations require scanning all shards.
+\end{itemize}
 
-\subsubsection{Index Lookup}
-Use when filtering on an indexed attribute:
+\section{Algorithm Choice}
+
+\subsection{Index Lookup}
 \[
 \text{vol}_{RAM}(q)
 =
 index_q + sel_{att} \cdot coll \cdot size_{doc}
 \]
 
-\subsubsection{Full Scan}
-Use when no index exists or selectivity is high:
+where $index_q \approx 1$ MB.
+
+\subsection{Full Scan}
+Used when no index exists or when selectivity is high:
 \[
 sel_{att} = 1
-\]
-
-\subsubsection{Nested Loop Join}
-(Only for completeness; NoSQL systems avoid joins.)
-\[
-cost
-=
-(S + C1')
-+
-C1' \times (S + C2')
 \]
 
 \end{document}
