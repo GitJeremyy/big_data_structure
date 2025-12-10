@@ -2,7 +2,7 @@
 
 ## 📊 Overview
 
-TD2 focuses on analyzing the execution cost of database queries across different denormalization strategies. The goal is to understand how database design choices impact query performance, resource consumption, and environmental footprint.
+TD2 focuses on analysing the execution cost of database queries across different denormalization strategies. The goal is to understand how database design choices impact query performance, resource consumption, and environmental footprint.
 
 ---
 
@@ -10,7 +10,7 @@ TD2 focuses on analyzing the execution cost of database queries across different
 
 1. **Compare query costs** - See how the same query performs across different database designs
 2. **Understand distributed queries** - Learn how sharding affects query execution
-3. **Analyze resource usage** - Calculate network, RAM, and time costs
+3. **Analyse resource usage** - Calculate network, RAM, and time costs
 4. **Consider sustainability** - Measure carbon footprint of database queries
 
 ---
@@ -201,7 +201,7 @@ GET http://127.0.0.1:8000/TD2/queryParserTest?example=Q1
 Complete query cost analysis: parse SQL and calculate all execution metrics.
 
 **Parameters:**
-- `sql` (query param, default: Q1) - SQL query to analyze
+- `sql` (query param, default: Q1) - SQL query to analyse
 - `db_signature` (query param, default: DB1) - Database design (DB0-DB5)
 - `collection_size_file` (query param, default: results_TD1.json) - Data source
 - `sharding_key` (query param, default: IDP) - Sharding field (IDP, IDC, IDW, IDS, date)

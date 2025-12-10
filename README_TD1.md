@@ -2,7 +2,7 @@
 
 ## 📊 Overview
 
-TD1 focuses on calculating and analyzing the storage footprint of different database denormalization strategies. The goal is to understand how embedding documents and arrays affects the total storage requirements in NoSQL databases.
+TD1 focuses on calculating and analysing the storage footprint of different database denormalization strategies. The goal is to understand how embedding documents and arrays affects the total storage requirements in NoSQL databases.
 
 ---
 
@@ -10,7 +10,7 @@ TD1 focuses on calculating and analyzing the storage footprint of different data
 
 1. **Understand denormalization impact** - See how different embedding strategies affect storage
 2. **Calculate document sizes** - Learn to compute byte-level storage for complex documents
-3. **Analyze data distribution** - Understand sharding and data distribution across servers
+3. **Analyse data distribution** - Understand sharding and data distribution across servers
 4. **Compare designs** - Evaluate trade-offs between different database designs
 
 ---
@@ -39,7 +39,7 @@ type == "object" → "object" or "reference"
 ```
 
 #### 2. `statistics.py` - Dataset Statistics
-**Purpose:** Centralize all dataset volumes and byte sizes
+**Purpose:** Centralise all dataset volumes and byte sizes
 
 **Key Constants:**
 ```python
@@ -163,7 +163,9 @@ GET http://127.0.0.1:8000/TD1/shardingStats?db_signature=DB1
 - `docs_per_server` - Average documents per server
 - `sharding_key` - Field used for sharding
 - `nb_distinct_keys` - Number of unique sharding key values
-- `keys_per_server` - Average sharding keys per server
+- `keys_per_server` - Average sharding keys per server (minimum 1, since fractional keys aren't possible in practice)
+
+**Note on keys_per_server:** When `nb_distinct_keys < nb_servers` (e.g., 200 warehouses across 1000 servers), the calculation uses `max(1, nb_keys / nb_active_servers)` to ensure at least 1 key per active server. In the Stock example above, only 200 servers would actually be active (one per warehouse), so each active server gets exactly 1 key, even though the naive calculation shows 0.2.
 
 ---
 

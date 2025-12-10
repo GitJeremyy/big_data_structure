@@ -4,7 +4,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
 ![uv](https://img.shields.io/badge/Package_Manager-uv-purple)
 
-A FastAPI-based analytical tool for analyzing database storage, distribution, and query costs across multiple denormalization strategies in NoSQL systems.
+A FastAPI-based analytical tool for analysing database storage, distribution, and query costs across multiple denormalization strategies in NoSQL systems.
 
 ---
 
@@ -22,7 +22,7 @@ The system models a simplified e-commerce database with 6 different denormalizat
 
 ## 🗂️ Database Designs
 
-The project analyzes 6 different database schemas:
+The project analyses 6 different database schemas:
 
 | Design | Description | Structure |
 |--------|-------------|-----------|
