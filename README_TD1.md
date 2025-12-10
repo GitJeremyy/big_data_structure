@@ -215,16 +215,27 @@ GET http://127.0.0.1:8000/TD1/shardingStats?db_signature=DB1
 // Total: base fields + 12 (nesting) + embedded fields
 ```
 
-### Example 3: Embedded Array (DB1 - Product with Categories)
+### Example 3: Embedded Array (DB2 - Product with Stock Array)
 ```json
 {
   "IDP": 123,
-  "categories": [       // +12 B (array overhead)
-    {"title": "Electronics"}, // 12 + 12 + 80 = 104 B
-    {"title": "Computers"}    // 12 + 12 + 80 = 104 B
+  "name": "Laptop",
+  "price": 999.99,
+  "stock": [            // +12 B (array overhead)
+    {
+      "IDW": 1,         // 12 + 8 = 20 B
+      "quantity": 50,   // 12 + 8 = 20 B
+      "location": "A1"  // 12 + 80 = 92 B
+    },                  // = 132 B per stock entry
+    {
+      "IDW": 2,
+      "quantity": 30,
+      "location": "B2"
+    }                   // Another 132 B
   ]
 }
-// Array size = 12 + (num_elements × element_size)
+// Array size = 12 + (num_warehouses × stock_entry_size)
+// With 200 warehouses: 12 + (200 × 132) = 26,412 B just for stock!
 ```
 
 ---
