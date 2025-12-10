@@ -5,6 +5,8 @@ Implements formulas from formulas_TD2.tex for computing query costs.
 
 from typing import Dict, List, Optional
 from services.statistics import Statistics
+from services.schema_client import Schema
+from services.sizing import Sizer
 import json
 from pathlib import Path
 
@@ -47,6 +49,7 @@ class QueryCostCalculator:
         self.db_signature = db_signature
         self.collection_size_file = collection_size_file
         self._load_db_info()
+        self._load_schema()
 
     def _load_db_info(self):
         """Load collection info from specified collection size file"""
@@ -66,6 +69,99 @@ class QueryCostCalculator:
         self.collections = {}
         for coll in self.db_info["collections"]:
             self.collections[coll["collection"]] = coll
+    
+    def _load_schema(self):
+        """Load JSON schema for the database signature (same pattern as QueryParser)"""
+        schema_path = Path(__file__).resolve().parent / 'JSON_schema' / f'json-schema-{self.db_signature}.json'
+        
+        if not schema_path.exists():
+            raise FileNotFoundError(f"Schema file not found: {schema_path}")
+        
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            schema_data = json.load(f)
+        
+        self.schema = Schema(schema_data)
+        
+        # Build a lookup for field types by collection
+        self._build_field_type_lookup()
+        
+        # Initialize Sizer for calculating embedded object sizes
+        self.sizer = Sizer(self.schema, self.stats)
+    
+    def _build_field_type_lookup(self):
+        """Build a lookup dict: {collection_name: {field_name: type}} (same as QueryParser)"""
+        self.field_types = {}
+        
+        result = self.schema.detect_entities_and_relations()
+        
+        # Process top-level entities
+        for entity in result["entities"]:
+            collection_name = entity["name"]
+            self.field_types[collection_name] = {}
+            
+            for attr in entity["attributes"]:
+                field_name = attr["name"]
+                field_type = self.schema._classify_attr_type(attr)
+                self.field_types[collection_name][field_name] = field_type
+        
+        # Process nested entities (embedded collections like Stock in DB2)
+        for entity in result["nested_entities"]:
+            collection_name = entity["name"]
+            self.field_types[collection_name] = {}
+            
+            for attr in entity["attributes"]:
+                field_name = attr["name"]
+                field_type = self.schema._classify_attr_type(attr)
+                self.field_types[collection_name][field_name] = field_type
+    
+    def infer_type(self, collection: str, field_name: str) -> str:
+        """Infer field type from JSON schema (same as QueryParser.infer_type)"""
+        if collection in self.field_types and field_name in self.field_types[collection]:
+            return self.field_types[collection][field_name]
+        return 'integer'
+    
+    def _calculate_object_size(self, collection: str, field_name: str) -> int:
+        """
+        Calculate the size of an embedded object field (like Product.price).
+        Leverages Sizer's logic for consistency with TD1 calculations.
+        
+        Args:
+            collection: Collection name
+            field_name: Field name of the object
+            
+        Returns:
+            Total size in bytes
+        """
+        type_sizes = Statistics.size_map()
+        KEY_OVERHEAD = type_sizes["key"]
+        
+        # Find the field in the entity's attributes
+        entity = self.sizer._get_entity(collection)
+        if not entity:
+            return Statistics.SIZE_INTEGER
+        
+        # Find the specific attribute
+        target_attr = None
+        for attr in entity.get("attributes", []):
+            if attr.get("name") == field_name:
+                target_attr = attr
+                break
+        
+        if not target_attr:
+            return Statistics.SIZE_INTEGER
+        
+        attr_type = self.schema._classify_attr_type(target_attr)
+        
+        # For reference types (embedded objects), calculate the nested entity size
+        if attr_type == "reference":
+            child_name = target_attr.get("reference_to", "")
+            child_entity = self.sizer._get_entity(child_name)
+            if child_entity:
+                # Use Sizer's recursive calculation
+                return self.sizer.estimate_document_size(child_entity)
+        
+        # Fallback for non-reference types
+        return type_sizes.get(attr_type, Statistics.SIZE_INTEGER)
     
     def _resolve_collection(self, logical_collection: str) -> str:
         """
@@ -88,15 +184,16 @@ class QueryCostCalculator:
     # QUERY SIZE CALCULATION (from formulas_TD2.tex)
     # ============================================================
 
-    def calculate_query_sizes(self, filter_fields: List[Dict], project_fields: List[Dict]) -> tuple:
+    def calculate_query_sizes(self, collection: str, filter_fields: List[Dict], project_fields: List[Dict]) -> tuple:
         """
         Calculate size_input and size_msg based on formulas from formulas_TD2.tex
         
         Formula:
         size_input = Σ(12 + size(value_i)) + 12 × (nesting levels)
-        size_msg = Σ(12 + size(value_j)) for projected fields
+        size_msg = Σ(12 + size(value_j)) for projected fields (using actual field types from schema)
         
         Args:
+            collection: Collection name for field type lookup
             filter_fields: List of {"name": str, "type": str} for WHERE clause
             project_fields: List of {"name": str, "type": str} for SELECT clause
         
@@ -132,10 +229,19 @@ class QueryCostCalculator:
         size_input += NESTING_OVERHEAD
         
         # Calculate output message size (per result document)
+        # Use actual field types from schema, not the 'boolean' from parser
         size_msg = 0
         for field in project_fields:
-            field_type = field.get("type", "integer")
-            value_size = type_sizes.get(field_type, 8)
+            field_name = field.get("name")
+            # Look up actual field type using infer_type (same as QueryParser)
+            actual_type = self.infer_type(collection, field_name)
+            
+            # Handle embedded objects (like Product.price)
+            if actual_type in ["reference", "object"]:
+                value_size = self._calculate_object_size(collection, field_name)
+            else:
+                value_size = type_sizes.get(actual_type, Statistics.SIZE_INTEGER)
+            
             size_msg += KEY_OVERHEAD + value_size
         
         return (size_input, size_msg)
@@ -271,7 +377,7 @@ class QueryCostCalculator:
         size_doc = coll_info["doc_size_bytes"]
         
         # Calculate query sizes
-        size_input, size_msg = self.calculate_query_sizes(filter_fields, project_fields)
+        size_input, size_msg = self.calculate_query_sizes(collection, filter_fields, project_fields)
         
         # Calculate selectivity
         sel_att = self.calculate_selectivity(collection, filter_fields)

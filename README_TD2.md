@@ -58,7 +58,12 @@ result = parse_query(sql, db_signature="DB1")
 ##### Query Size Calculation
 ```
 size_input = Σ(12 + size(filter_value)) + Σ(12 + 8) for projections + 12 (nesting)
+  - Filter values: use actual types (number, string, date, etc.)
+  - Project fields: use boolean/integer (8 bytes) which indicates "include this field"
+  
 size_msg = Σ(12 + size(projected_value)) per result document
+  - Uses actual field types from schema (quantity=number, location=string, etc.)
+  - Example: SELECT quantity, location → 12+8 (number) + 12+80 (string) = 112 B
 ```
 
 ##### Selectivity Calculation
@@ -79,7 +84,7 @@ S = 1000 if not filtering on sharding key (broadcast query)
 ```
 vol_network = S × size_input + res_q × size_msg
 vol_RAM = index_size + sel_att × docs_per_server × doc_size  (with index)
-vol_RAM = docs_per_server × doc_size                          (without index)
+vol_RAM = docs_per_server × doc_size                         (without index)
 ```
 
 ##### Cost Calculations
@@ -105,7 +110,7 @@ DEFAULT_INDEX_SIZE = 1_000_000     # 1 MB
 
 ### Why We Need Mapping
 
-**Problem:** When querying "Stock" in DB2, Stock doesn't exist as a separate collection—it's embedded within Product.
+**Problem:** When querying "Stock" in DB2, Stock doesn't exist as a separate collection (it's embedded within Product).
 
 **Solution:** Automatic collection mapping resolves logical collection names to physical collection names.
 
@@ -141,7 +146,7 @@ COLLECTION_MAPPING = {
 **Why This Design Choice?**
 1. ✅ **Enables cross-design comparison** - Same query works on all DB designs
 2. ✅ **Matches TD objective** - Compare cost impact of different denormalizations
-3. ✅ **Educational value** - Students learn about logical vs physical schemas
+3. ✅ **Educational value** - Learn about logical vs physical schemas
 4. ✅ **Maintains query semantics** - "Give me Stock info" works regardless of where Stock lives
 5. ✅ **Automatic and transparent** - Users don't need to know embedding details
 
@@ -154,7 +159,7 @@ DB1: Uses Stock collection (standalone)
 DB2: Automatically maps to Product collection (Stock is embedded)
 DB3: Uses Stock collection (contains Product)
 DB4: Uses Stock collection (standalone)
-DB5: Automatically maps to Product collection (Stock is embedded)
+DB5: Uses Stock collection (standalone)
 ```
 
 ---
@@ -285,23 +290,37 @@ GET http://127.0.0.1:8000/TD2/queryCalculateCost?sql=SELECT%20S.quantity%20FROM%
 ```sql
 SELECT S.quantity, S.location 
 FROM Stock S 
-WHERE S.IDP = $IDP AND S.IDW = $IDW
+WHERE S.IDP = 1 AND S.IDW = 2
 ```
 
 **Characteristics:**
-- **Selectivity:** Very high (1 out of 20 million)
-- **Sharding:** Filter on IDP (sharding key) → Only 1 server accessed
-- **Index:** Beneficial (small result set)
+- **Selectivity:** Very high (1 out of 20 million = 5.00e-08)
+- **Filter includes:** IDP (product) and IDW (warehouse)
+- **Good sharding key:** IDP (in filter)
+- **Bad sharding key:** IDC (not in filter)
 
-**Cost Comparison:**
+**Size Breakdown:**
+- `size_input = 92 B`: IDP filter (12+8) + IDW filter (12+8) + quantity project (12+8) + location project (12+8) + nesting (12)
+- `size_msg = 112 B`: quantity (12+8) + location (12+80)
 
-| Design | Collection | S | Selectivity | Network | RAM | Time | Carbon |
-|--------|-----------|---|-------------|---------|-----|------|--------|
-| DB0 | Stock | 1 | 5e-8 | 132 B | 1 MB | 0.32 ms | 28 µgCO2 |
-| DB1 | Stock | 1 | 5e-8 | 132 B | 1 MB | 0.32 ms | 28 µgCO2 |
-| DB2 | Product | 1 | 5e-8 | 132 B | 1 MB | 0.32 ms | 28 µgCO2 |
+#### Results Across All Databases
 
-**Insight:** Highly selective queries perform similarly across designs.
+| DB | Collection | Good Key | S (Good) | Results | Network (Good) | S (Bad) | Network (Bad) | Network Increase |
+|----|-----------|----------|----------|---------|----------------|---------|---------------|------------------|
+| DB0 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
+| DB1 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
+| DB2 | Product* | IDP | 1 | **0** | 9.20e+01 B | 1000 | 9.20e+04 B | **1000×** |
+| DB3 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
+| DB4 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
+| DB5 | Product* | IDP | 1 | **0** | 9.20e+01 B | 1000 | 9.20e+04 B | **1000×** |
+
+*Stock embedded in Product - query returns 0 because we're filtering by IDP+IDW but Stock is nested
+
+**Key Insights:**
+- ✅ **Sharding matters hugely:** 450-1000× more network traffic with wrong key
+- ⚠️ **DB2 & DB5 return 0 results:** Stock embedded in Product, can't filter by IDP at Stock level
+- 🎯 **Optimal design:** DB0, DB1, DB3, DB4 with IDP sharding (S=1, 204B network)
+- ❌ **Worst case:** Any database with IDC sharding (S=1000, 92KB network)
 
 ---
 
@@ -315,18 +334,35 @@ WHERE P.brand = 'Apple'
 ```
 
 **Characteristics:**
-- **Selectivity:** Moderate (50 out of 100k = 0.0005)
-- **Sharding:** Filter NOT on sharding key → All 1000 servers accessed
-- **Index:** Very beneficial (avoids full scan)
+- **Selectivity:** Moderate (50 out of 100k = 5.00e-04)
+- **Filter includes:** brand (NOT a sharding key!)
+- **Result:** S=1000 for ALL databases (broadcast query)
+- **Index:** Critical (avoids full collection scan)
 
-**Cost Comparison:**
+**Size Breakdown:**
+- `size_input = 144 B`: brand filter (12+80) + name project (12+8) + price project (12+8) + nesting (12)
+- `size_msg = 236 B`: name (12+80) + price object (12+132)
+  - **price object = 132 B**: amount (12+8) + currency (12+80) + VAT (12+8)
 
-| Design | Collection | S | Results | Network | RAM | Time | Carbon |
-|--------|-----------|---|---------|---------|-----|------|--------|
-| DB0 | Product | 1000 | 50 | ~92 KB | ~1 MB/server | High | High |
-| DB1 | Product | 1000 | 50 | ~114 KB | ~1.2 MB/server | Higher | Higher |
+#### Results Across All Databases
 
-**Insight:** Broadcast queries (S=1000) are expensive. Embedding increases cost.
+| DB | Collection | S | Results | Network | Time | Carbon | Result Explanation |
+|----|-----------|---|---------|---------|------|--------|--------------------|
+| DB0 | Product | 1000 | 50 | 1.56e+05 B | 1.57e-03 s | 2.97e-05 gCO2 | Normal: 50 products |
+| DB1 | Product | 1000 | 50 | 1.56e+05 B | 1.57e-03 s | 2.97e-05 gCO2 | Normal: 50 products |
+| DB2 | Product | 1000 | 50 | 1.56e+05 B | 1.57e-03 s | 2.97e-05 gCO2 | Normal: 50 products |
+| DB3 | Product* | 1000 | **10,000** | **2.43e+06 B** | **1.98e-02 s** | **5.51e-05 gCO2** | Product in Stock: 50 × 200 warehouses |
+| DB4 | Product* | 1000 | **2,000,000** | **4.72e+08 B** | **3.78e+00 s** | **5.30e-03 gCO2** | Product in OrderLine: 50 × 40k orders |
+| DB5 | Product | 1000 | 50 | 1.56e+05 B | 1.57e-03 s | 2.97e-05 gCO2 | Normal: 50 products |
+
+*Product embedded - returns duplicates for each parent document
+
+**Key Insights:**
+- 🚨 **DB4 is catastrophic:** 2 million results, 472 MB network, 3.78 seconds!
+- ⚠️ **DB3 is problematic:** 10k results (200× more than expected)
+- ✅ **DB0, DB1, DB2, DB5 are optimal:** 50 results, 156 KB, 1.57 ms
+- 📊 **Embedding impact:** Product embedded in high-cardinality collections causes massive result inflation
+- 💡 **Sharding key irrelevant:** Brand not in any sharding key → always S=1000
 
 ---
 
@@ -340,19 +376,40 @@ WHERE O.date = '2024-01-01'
 ```
 
 **Characteristics:**
-- **Selectivity:** Low (1/365 days)
-- **Result count:** ~11 million documents
-- **Sharding:** Filter NOT on sharding key → All servers accessed
-- **Index:** Critical for performance
+- **Selectivity:** Low (1/365 days = 2.74e-03)
+- **Expected results:** ~11 million documents (0.27% of 4 billion)
+- **Good sharding key:** date (in filter)
+- **Bad sharding key:** IDC (not in filter)
 
-**Cost Comparison:**
+**Size Breakdown:**
+- `size_input = 84 B`: date filter (12+20) + IDP project (12+8) + quantity project (12+8) + nesting (12)
+- `size_msg = 40 B`: IDP (12+8) + quantity (12+8)
 
-| Design | Collection | S | Results | Network | RAM | Time | Carbon |
-|--------|-----------|---|---------|---------|-----|------|--------|
-| DB0 | OrderLine | 1000 | 11M | ~11 GB | 1.3 GB | Very High | Very High |
-| DB4 | OrderLine | 1000 | 11M | ~11 GB | Higher | Higher | Higher |
+#### Results Across All Databases
 
-**Insight:** Large result sets dominate cost. Embedding makes it worse.
+| DB | Collection | S (Good) | S (Bad) | Results | Network | Time | Impact |
+|----|-----------|----------|---------|---------|---------|------|--------|
+| DB0 | OrderLine | 1 | 1000 | 10,958,904 | 4.38e+08 B | 3.51 s | Same cost both ways! |
+| DB1 | OrderLine | 1 | 1000 | 10,958,904 | 4.38e+08 B | 3.51 s | Same cost both ways! |
+| DB2 | OrderLine | 1 | 1000 | 10,958,904 | 4.38e+08 B | 3.51 s | Same cost both ways! |
+| DB3 | OrderLine | 1 | 1000 | 10,958,904 | 4.38e+08 B | 3.51 s | Same cost both ways! |
+| DB4 | OrderLine | 1 | 1000 | 10,958,904 | 4.38e+08 B | 3.51 s | Same cost both ways! |
+| DB5 | Product* | 1 | 1000 | **273** | **1.10e+04 B** | **1.59e-03 s** | **40,000× fewer results!** |
+
+*OrderLine embedded in Product - fundamentally different query semantics
+
+**Key Insights:**
+- 🔥 **Massive result set:** 11M documents = 438 MB transferred
+- ⏱️ **Time dominated by network:** 3.51 seconds (438MB ÷ 125MB/s)
+- 🤔 **Sharding key irrelevant:** date vs IDC makes NO difference!
+  - **Why?** Result set so large that network transfer dominates
+  - date sharding (S=1): 1 server → coordinator transfers 438 MB
+  - IDC sharding (S=1000): 1000 servers → coordinator still receives 438 MB total
+- 🌟 **DB5 is radically different:** Only 273 products had orders on that date
+  - **11 KB vs 438 MB** - 40,000× smaller!
+  - **1.59 ms vs 3.51 s** - 2,200× faster!
+  - Different semantics: "Products with orders on date" vs "Orders on date"
+- 💡 **Lesson:** Low selectivity queries need result set optimization, not just sharding
 
 ---
 
