@@ -297,17 +297,4 @@ uv run python -c "from services.sizing import Sizer; from services.schema_client
 
 ---
 
-## 🤔 Common Questions
-
-**Q: Why do some designs use more storage?**
-A: Embedding creates data duplication. For example, if Product is embedded in Stock, the product data is repeated for each warehouse.
-
-**Q: What's the difference between embedded object and array?**
-A: Objects are single nested documents, arrays contain multiple nested documents (e.g., one product can have multiple categories).
-
-**Q: How accurate are these calculations?**
-A: They're approximations based on MongoDB storage mechanics. Real storage may vary due to indexes, compression, and storage engine overhead.
-
----
-
 [← Back to General README](README_GENERAL.md) | [TD2 Documentation →](README_TD2.md)
