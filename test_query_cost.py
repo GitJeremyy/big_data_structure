@@ -3,6 +3,7 @@ Test script for query cost calculator
 """
 
 from services.query_cost import QueryCostCalculator
+from services.statistics import Statistics
 import json
 
 def test_q1():
@@ -29,7 +30,7 @@ def test_q1():
         ],
         "sharding_key": "IDW",  # Stock sharded by warehouse ID
         "has_index": True,
-        "index_size": 1_000_000  # 1 MB index
+        "index_size": Statistics.DEFAULT_INDEX_SIZE
     }
     
     result = calc.calculate_query_cost(query)
@@ -73,7 +74,7 @@ def test_q2():
         ],
         "sharding_key": "IDP",  # Product sharded by IDP, not brand
         "has_index": True,
-        "index_size": 500_000  # 500 KB index on brand
+        "index_size": Statistics.DEFAULT_INDEX_SIZE
     }
     
     result = calc.calculate_query_cost(query)
@@ -103,7 +104,7 @@ def test_q3():
         ],
         "sharding_key": "IDC",  # OrderLine sharded by client ID
         "has_index": True,
-        "index_size": 10_000_000  # 10 MB index on date
+        "index_size": Statistics.DEFAULT_INDEX_SIZE
     }
     
     result = calc.calculate_query_cost(query)

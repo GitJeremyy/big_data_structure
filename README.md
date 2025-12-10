@@ -1,259 +1,231 @@
-# 🧮 Big Data Structure
+# Big Data Structure - Database Analysis Tool
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
 ![uv](https://img.shields.io/badge/Package_Manager-uv-purple)
 
-A **FastAPI-based analytical tool** for estimating database storage and distribution characteristics across multiple **denormalisation strategies (DB0–DB5)**.  
-It models a simplified e-commerce system and computes both:
-- The **total storage footprint** of each database design.
-- The **sharding distribution** (docs per server, keys per server) given infrastructure statistics.
+A FastAPI-based analytical tool for analyzing database storage, distribution, and query costs across multiple denormalization strategies in NoSQL systems.
+
+---
+
+## 🎯 Project Overview
+
+This project is a comprehensive educational tool designed to understand the impact of different database denormalization strategies on:
+- **Storage footprint** (TD1)
+- **Data distribution** (TD1)
+- **Query execution costs** (TD2)
+- **Environmental impact** (TD2)
+
+The system models a simplified e-commerce database with 6 different denormalization strategies (DB0-DB5), allowing comparison of how design choices affect performance and resource consumption.
+
+---
+
+## 🗂️ Database Designs
+
+The project analyzes 6 different database schemas:
+
+| Design | Description | Structure |
+|--------|-------------|-----------|
+| **DB0** | Fully normalized | Prod, Cat, Supp, St, Wa, OL, Cl |
+| **DB1** | Categories & Supplier in Product | Prod{[Cat],Supp}, St, Wa, OL, Cl |
+| **DB2** | + Stock in Product | Prod{[Cat],Supp,[St]}, Wa, OL, Cl |
+| **DB3** | Product hierarchy in Stock | St{Prod{[Cat],Supp}}, Wa, OL, Cl |
+| **DB4** | Product hierarchy in OrderLine | St, Wa, OL{Prod{[Cat],Supp}}, Cl |
+| **DB5** | OrderLine in Product | Prod{[Cat],Supp,[OL]}, St, Wa, Cl |
+
+**Legend:** `[Collection]` = embedded array, `Collection` = embedded object
 
 ---
 
 ## 🚀 Quick Start
 
-### 1️⃣ Clone the repository
+### 1. Clone and Install
+
 ```bash
 git clone <repository-url>
 cd big_data_structure
-```
-
-### 2️⃣ Install dependencies using [`uv`](https://github.com/astral-sh/uv)
-```bash
 pip install uv
 uv sync
 ```
 
-### 3️⃣ Run the FastAPI application
+### 2. Run the API
+
 ```bash
 uv run fastapi dev app/main.py
 ```
 
-➡️ The API will be available at:  
-**http://127.0.0.1:8000**
+The API will be available at **http://127.0.0.1:8000**
 
-Open the interactive documentation at:  
-**http://127.0.0.1:8000/docs**
+### 3. Access Documentation
+
+Open **http://127.0.0.1:8000/docs** for interactive API documentation
 
 ---
 
-## 🧩 Endpoints
+## 📡 API Endpoints
 
-### `/bytesCalculator`
-Estimate total storage size for a selected database profile (DB0–DB5).
+### TD1 - Storage Analysis
+
+#### `/TD1/bytesCalculator`
+Calculate total storage size for each database design based on JSON schemas.
 
 **Example:**
 ```
-GET /bytesCalculator?db_signature=DB5
+GET /TD1/bytesCalculator?db_signature=DB1
 ```
 
-**Response:**
-```json
-{
-  "message": "Byte calculation successful!",
-  "db_signature": "DB4",
-  "database_total": "5386.28 GB (Database_Total)",
-  "collections": {
-    "Stock": {
-      "nb_docs": 20000000,
-      "avg_doc_bytes": 112,
-      "total_size_bytes": 2240000000,
-      "total_size_human": "2.09 GB (Stock)"
-    },
-    "Warehouse": {
-      "nb_docs": 200,
-      "avg_doc_bytes": 132,
-      "total_size_bytes": 26400,
-      "total_size_human": "25.78 KB (Warehouse)"
-    },
-    "OrderLine": {
-      "nb_docs": 4000000000,
-      "avg_doc_bytes": 1444,
-      "total_size_bytes": 5776000000000,
-      "total_size_human": "5379.32 GB (OrderLine)"
-    },
-    "Client": {
-      "nb_docs": 10000000,
-      "avg_doc_bytes": 512,
-      "total_size_bytes": 5120000000,
-      "total_size_human": "4.77 GB (Client)"
-    },
-    "Categories": {
-      "nb_docs": 0,
-      "avg_doc_bytes": 0,
-      "total_size_bytes": 0,
-      "total_size_human": "0.00 GB (Categories)"
-    },
-    "Product": {
-      "nb_docs": 100000,
-      "avg_doc_bytes": 1116,
-      "total_size_bytes": 111600000,
-      "total_size_human": "106.43 MB (Product)"
-    },
-    "Price": {
-      "nb_docs": 0,
-      "avg_doc_bytes": 132,
-      "total_size_bytes": 0,
-      "total_size_human": "0.00 GB (Price)"
-    },
-    "Supplier": {
-      "nb_docs": 0,
-      "avg_doc_bytes": 440,
-      "total_size_bytes": 0,
-      "total_size_human": "0.00 GB (Supplier)"
-    },
-    "Revenue": {
-      "nb_docs": 0,
-      "avg_doc_bytes": 132,
-      "total_size_bytes": 0,
-      "total_size_human": "0.00 GB (Revenue)"
-    },
-    "Database_Total": {
-      "total_size_bytes": 5783471626400,
-      "total_size_human": "5386.28 GB (Database_Total)"
-    }
-  }
-}
+**Returns:**
+- Total database size
+- Per-collection document count and size
+- Human-readable size formats (KB, MB, GB)
+
+#### `/TD1/shardingStats`
+Calculate data distribution across servers for sharding strategies.
+
+**Example:**
 ```
+GET /TD1/shardingStats?db_signature=DB1
+```
+
+**Returns:**
+- Documents per server
+- Sharding keys per server
+- Distribution statistics
 
 ---
 
-### `/shardingStats`
-Compute **document and key distribution** across servers for the six predefined sharding strategies.
+### TD2 - Query Cost Analysis
 
-**Example Console Output:**
+#### `/TD2/queryParserTest`
+Test the SQL query parser with predefined examples (Q1, Q2, Q3).
+
+**Example:**
 ```
-=== SHARDING DISTRIBUTION STATISTICS ===
-Collection   Shard key     Docs/server     Keys/server    Active servers     Docs/active
-----------------------------------------------------------------------------------------
-Stock        #IDP              20,000          100.00             1,000          20,000
-Stock        #IDW              20,000            1.00               200         100,000
-OrderLine    #IDC           4,000,000       10,000.00             1,000       4,000,000
-OrderLine    #IDP           4,000,000          100.00             1,000       4,000,000
-Product      #IDP                 100          100.00             1,000             100
-Product      #brand               100            5.00             1,000             100
-----------------------------------------------------------------------------------------
-Total servers available: 1,000
+GET /TD2/queryParserTest?example=Q1
 ```
+
+#### `/TD2/queryCalculateCost`
+Complete query analysis: parse SQL and calculate execution costs.
+
+**Example:**
+```
+GET /TD2/queryCalculateCost?sql=SELECT S.quantity FROM Stock S WHERE S.IDP=1&db_signature=DB1&has_index=true
+```
+
+**Returns:**
+- Number of servers accessed (S)
+- Selectivity and result count
+- Network and RAM volumes
+- Execution time
+- Carbon footprint (gCO2)
 
 ---
 
-## 🧠 Core Components
+## 🧪 Example Queries
 
-### 🧩 `Schema` — Schema Parsing & Entity Detection
-Located in **`services/schema_client.py`**
-
-- Detects entities and nested entities from JSON schemas  
-- Identifies arrays, embedded objects, and attribute types
-- Estimates intrinsic document size per entity  
-
-**Key methods:**
-```python
-detect_entities_and_relations()
-_classify_attr_type(attr)
-count_attribute_types(entity)
-print_entities_and_relations()
+### Q1: Stock Lookup by Product and Warehouse
+```sql
+SELECT S.quantity, S.location 
+FROM Stock S 
+WHERE S.IDP = $IDP AND S.IDW = $IDW
 ```
+**Use Case:** Check product availability at specific warehouse
 
----
-
-### ⚙️ `Sizer` — Schema-Based Size Estimator
-Located in **`services/sizing.py`**
-
-Computes per-document and per-collection sizes using:
-- Schema structure (fields, embedded docs, arrays)
-- Dataset statistics (e.g. number of products, warehouses)
-
-**Features**
-- Adds +12 B for required keys  
-- Multiplies by average multiplicities (categories per product, etc.)
-
-**Key methods**
-```python
-estimate_document_size(entity)
-compute_collection_sizes()
+### Q2: Products by Brand
+```sql
+SELECT P.name, P.price 
+FROM Product P 
+WHERE P.brand = 'Apple'
 ```
+**Use Case:** Find all products from a specific brand
 
----
-
-### 📊 `Statistics` — Dataset & Sharding Model
-Located in **`services/statistics.py`**
-
-Centralises:
-- Dataset constants (e.g. 10 M clients, 4 B order lines)
-- Byte-size mappings per type  
-- Infrastructure setup (1 000 servers)
-- Sharding distribution computation  
-
-**Key methods**
-```python
-get_collection_count(name)
-compute_sharding_stats()
+### Q3: Orders by Date
+```sql
+SELECT O.IDP, O.quantity 
+FROM OrderLine O 
+WHERE O.date = '2024-01-01'
 ```
+**Use Case:** Retrieve orders from a specific date
 
 ---
 
-### 🌐 `bytesCalculator` API
-Located in **`app/routers/bytesCalculator.py`**
+## 📊 Dataset Statistics
 
-Provides two REST endpoints:
-- `/bytesCalculator` → storage estimation by DB signature  
-- `/shardingStats` → sharding statistics across servers  
-
-**Automatically loads:**
-- JSON schema (`json-schema-DBx.json`)
-- Dataset stats
-- Entity parser and Sizer
+- **Clients:** 10 million
+- **Products:** 100,000
+- **Order Lines:** 4 billion
+- **Warehouses:** 200
+- **Stock Records:** 20 million (100k products × 200 warehouses)
+- **Servers:** 1,000 (for sharding calculations)
 
 ---
 
-## 📦 Project Structure
+## 🛠️ Technology Stack
+
+- **FastAPI** - Modern web framework for APIs
+- **Python 3.13** - Latest Python version
+- **uv** - Fast Python package manager
+- **Pydantic** - Data validation
+- **JSON Schema** - Database schema definitions
+
+---
+
+## 📚 Project Structure
 
 ```
 big_data_structure/
 ├── app/
-│   ├── main.py
+│   ├── main.py                    # FastAPI application
 │   └── routers/
-│       └── bytesCalculator.py
+│       ├── bytesCalculator.py     # TD1 endpoints
+│       └── queryParser.py         # TD2 endpoints
 ├── services/
-│   ├── schema_client.py
-│   ├── sizing.py
-│   ├── statistics.py
-│   └── JSON_schema/
-│       ├── json-schema-DB0.json
-│       ├── json-schema-DB1.json
-│       ├── json-schema-DB2.json
-│       ├── json-schema-DB3.json
-│       ├── json-schema-DB4.json
-│       └── json-schema-DB5.json
-├── pyproject.toml
-└── README.md
+│   ├── schema_client.py           # JSON schema parser
+│   ├── sizing.py                  # Storage calculations
+│   ├── statistics.py              # Dataset statistics
+│   ├── query_parser.py            # SQL parser
+│   ├── query_cost.py              # Cost calculator
+│   ├── results_TD1.json           # Student results
+│   ├── teacher_correction_TD1.json # Teacher correction
+│   └── JSON_schema/               # Database schemas (DB0-DB5)
+├── test_query_cost.py             # Query cost tests
+├── test_query_parser.py           # Parser tests
+├── README_GENERAL.md              # This file
+├── README_TD1.md                  # TD1 detailed documentation
+└── README_TD2.md                  # TD2 detailed documentation
 ```
 
 ---
 
-## 🧰 Extending the Project
+## 🎓 Educational Goals
 
-To add a **new database variant (DB6)**:
-1. Create a new JSON schema in `services/JSON_schema/` (e.g. `json-schema-DB6.json`)  
-2. Add its signature to `DB_SIGNATURES` in `bytesCalculator.py`  
-3. The system auto-detects entities and computes new sizes dynamically  
+### TD1: Understanding Storage Impact
+- Learn how denormalization affects storage requirements
+- Understand document embedding and arrays
+- Calculate realistic storage needs for NoSQL databases
 
-To adjust **sharding scenarios**:
-- Change parameters in `Statistics` (e.g. `nb_servers`, `nb_clients`)  
-- Call `/shardingStats` to see new distribution results  
+### TD2: Analyzing Query Performance
+- Compare query costs across different designs
+- Understand the role of indexes and sharding
+- Learn about network vs RAM trade-offs
+- Consider environmental impact (carbon footprint)
+
+---
+
+## 📖 Further Reading
+
+- **[TD1 Documentation](README_TD1.md)** - Detailed storage analysis guide
+- **[TD2 Documentation](README_TD2.md)** - Detailed query cost analysis guide
+- **[API Documentation](http://127.0.0.1:8000/docs)** - Interactive Swagger UI
 
 ---
 
-## 🧮 Summary
+## 🤝 Contributing
 
-| Feature | Description |
-|----------|--------------|
-| **Storage estimation** | Computes total DB size (B, KB, MB, GB) |
-| **Schema-driven** | Infers structure directly from JSON schemas |
-| **Sharding statistics** | Calculates key and document distribution |
-| **Fast & lightweight** | No external DB, just FastAPI + Python |
-| **Fully extensible** | Add new DB signatures or adjust dataset scales |
+This is an educational project. For questions or improvements, please contact the project maintainers.
 
 ---
+
+## 📝 License
+
+Educational use only.

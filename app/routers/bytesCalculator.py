@@ -5,7 +5,7 @@ from services.sizing import Sizer
 from pathlib import Path
 import json
 
-router = APIRouter()
+router = APIRouter(prefix="/TD1", tags=["TD1 - Storage Analysis"])
 
 DB_SIGNATURES = {
     "DB0": "DB0: Prod, Cat, Supp, St, Wa, OL, Cl",

@@ -14,25 +14,75 @@ class QueryCostCalculator:
     Calculates query execution costs based on formulas from formulas_TD2.tex
     """
 
-    def __init__(self, db_signature: str = "DB0"):
+    # Collection mapping for embedded collections
+    # Maps logical collection names to physical collection names per DB
+    COLLECTION_MAPPING = {
+        "DB0": {},  # No embedding in DB0
+        "DB1": {},  # No embedding in DB1
+        "DB2": {
+            "Stock": "Product",      # Stock is embedded in Product
+            "Categories": "Product",  # Categories embedded in Product
+            "Supplier": "Product"     # Supplier embedded in Product
+        },
+        "DB3": {
+            "Product": "Stock",       # Product is embedded in Stock
+            "Categories": "Stock",    # Categories embedded in Stock (via Product)
+            "Supplier": "Stock"       # Supplier embedded in Stock (via Product)
+        },
+        "DB4": {
+            "Product": "OrderLine",   # Product is embedded in OrderLine
+            "Categories": "OrderLine", # Categories embedded in OrderLine (via Product)
+            "Supplier": "OrderLine"   # Supplier embedded in OrderLine (via Product)
+        },
+        "DB5": {
+            "OrderLine": "Product",   # OrderLine is embedded in Product
+            "Stock": "Product",       # Stock is embedded in Product
+            "Categories": "Product",  # Categories embedded in Product
+            "Supplier": "Product"     # Supplier embedded in Product
+        }
+    }
+
+    def __init__(self, db_signature: str = "DB0", collection_size_file: str = "results_TD1.json"):
         self.stats = Statistics()
         self.db_signature = db_signature
+        self.collection_size_file = collection_size_file
         self._load_db_info()
 
     def _load_db_info(self):
-        """Load collection info from results_TD1.json"""
-        results_path = Path(__file__).resolve().parent / 'results_TD1.json'
+        """Load collection info from specified collection size file"""
+        results_path = Path(__file__).resolve().parent / self.collection_size_file
+        
+        if not results_path.exists():
+            raise FileNotFoundError(f"Collection size file not found: {self.collection_size_file}")
+        
         with open(results_path, 'r', encoding='utf-8') as f:
             all_results = json.load(f)
         
         if self.db_signature not in all_results:
-            raise ValueError(f"DB signature {self.db_signature} not found")
+            raise ValueError(f"DB signature {self.db_signature} not found in {self.collection_size_file}")
         
         self.db_info = all_results[self.db_signature]
         # Create a lookup for collection info
         self.collections = {}
         for coll in self.db_info["collections"]:
             self.collections[coll["collection"]] = coll
+    
+    def _resolve_collection(self, logical_collection: str) -> str:
+        """
+        Resolve logical collection name to physical collection name.
+        Handles embedded collections by mapping to their parent collection.
+        
+        Args:
+            logical_collection: The collection name from the query (e.g., "Stock")
+            
+        Returns:
+            The physical collection name that exists in the DB (e.g., "Product" in DB2)
+        """
+        # Check if this collection is embedded in this DB signature
+        mapping = self.COLLECTION_MAPPING.get(self.db_signature, {})
+        physical_collection = mapping.get(logical_collection, logical_collection)
+        
+        return physical_collection
 
     # ============================================================
     # QUERY SIZE CALCULATION (from formulas_TD2.tex)
@@ -126,7 +176,7 @@ class QueryCostCalculator:
         
         elif collection.lower() == "product":
             if "brand" in filter_names:
-                # Assume Apple products for example
+                # Assume Apple products as only example in our data
                 return self.stats.nb_apple_products / self.stats.nb_products
             elif "idp" in filter_names:
                 # Specific product
@@ -205,11 +255,18 @@ class QueryCostCalculator:
         has_index = query.get("has_index", False)
         index_size = query.get("index_size", Statistics.DEFAULT_INDEX_SIZE if has_index else 0)
         
-        # Get collection info
-        if collection not in self.collections:
-            raise ValueError(f"Collection {collection} not found in {self.db_signature}")
+        # Resolve logical collection to physical collection (handles embedding)
+        physical_collection = self._resolve_collection(collection)
         
-        coll_info = self.collections[collection]
+        # Get collection info from physical collection
+        if physical_collection not in self.collections:
+            available = ", ".join(self.collections.keys())
+            raise ValueError(
+                f"Collection '{collection}' (resolves to '{physical_collection}') not found in {self.db_signature}. "
+                f"Available collections: {available}"
+            )
+        
+        coll_info = self.collections[physical_collection]
         nb_docs = coll_info["num_docs"]
         size_doc = coll_info["doc_size_bytes"]
         
@@ -251,6 +308,11 @@ class QueryCostCalculator:
         carbon_RAM = vol_RAM * Statistics.CO2_RAM
         carbon_total = carbon_network + carbon_RAM
         
+        # Format numbers in scientific notation for readability
+        def format_scientific(value: float) -> str:
+            """Format number in scientific notation (e.g., 1.45e-9)"""
+            return f"{value:.2e}"
+        
         return {
             "query": {
                 "collection": collection,
@@ -261,25 +323,25 @@ class QueryCostCalculator:
                 "has_index": has_index,
             },
             "sizes": {
-                "size_input": size_input,
-                "size_msg": size_msg,
-                "size_doc": size_doc,
+                "size_input_bytes": f"{size_input} B",
+                "size_msg_bytes": f"{size_msg} B",
+                "size_doc_bytes": f"{size_doc} B",
             },
             "distribution": {
-                "S": S,
-                "selectivity": sel_att,
-                "res_q": res_q,
+                "S_servers": S,
+                "selectivity": format_scientific(sel_att),
+                "res_q_results": res_q,
                 "nb_docs_total": nb_docs,
                 "nb_docs_per_server": coll_per_server,
             },
             "volumes": {
-                "vol_network_bytes": vol_network,
-                "vol_RAM_bytes": vol_RAM,
+                "vol_network": f"{format_scientific(vol_network)} B",
+                "vol_RAM": f"{format_scientific(vol_RAM)} B",
             },
             "costs": {
-                "time_seconds": time_cost,
-                "carbon_network_gCO2": carbon_network,
-                "carbon_RAM_gCO2": carbon_RAM,
-                "carbon_total_gCO2": carbon_total,
+                "time": f"{format_scientific(time_cost)} s",
+                "carbon_network": f"{format_scientific(carbon_network)} gCO2",
+                "carbon_RAM": f"{format_scientific(carbon_RAM)} gCO2",
+                "carbon_total": f"{format_scientific(carbon_total)} gCO2",
             }
         }
