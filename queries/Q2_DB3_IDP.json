@@ -1,0 +1,71 @@
+{
+  "message": "Query cost calculated successfully!",
+  "sql": "SELECT P.name, P.price FROM Product P WHERE P.brand = 'Apple'",
+  "db_signature": "DB3",
+  "collection_size_file": "results_TD1.json",
+  "parsed_query": {
+    "collection": "Product",
+    "filter_fields": [
+      {
+        "name": "brand",
+        "type": "integer"
+      }
+    ],
+    "project_fields": [
+      {
+        "name": "name",
+        "type": "boolean"
+      },
+      {
+        "name": "price",
+        "type": "boolean"
+      }
+    ]
+  },
+  "cost_analysis": {
+    "query": {
+      "collection": "Product",
+      "db_signature": "DB3",
+      "filter_fields": [
+        {
+          "name": "brand",
+          "type": "integer"
+        }
+      ],
+      "project_fields": [
+        {
+          "name": "name",
+          "type": "boolean"
+        },
+        {
+          "name": "price",
+          "type": "boolean"
+        }
+      ],
+      "sharding_key": "IDP",
+      "has_index": true
+    },
+    "sizes": {
+      "size_input_bytes": "72 B",
+      "size_msg_bytes": "236 B",
+      "size_doc_bytes": "1260 B"
+    },
+    "distribution": {
+      "S_servers": 1000,
+      "selectivity": "5.00e-04",
+      "res_q_results": 10000,
+      "nb_docs_total": 20000000,
+      "nb_docs_per_server": 20000.0
+    },
+    "volumes": {
+      "vol_network": "2.43e+06 B",
+      "vol_RAM": "1.01e+06 B"
+    },
+    "costs": {
+      "time": "1.98e-02 s",
+      "carbon_network": "2.68e-05 gCO2",
+      "carbon_RAM": "2.84e-05 gCO2",
+      "carbon_total": "5.51e-05 gCO2"
+    }
+  }
+}

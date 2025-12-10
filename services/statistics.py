@@ -16,6 +16,15 @@ class Statistics:
     SIZE_UNKNOWN = 8         # fallback for unknown types
     SIZE_KEY = 12            # key overhead (key + colon + type header)
 
+    # ============================================================
+    # TD2 - QUERY COST CONSTANTS
+    # ============================================================
+    BANDWIDTH_NETWORK = 125_000_000      # 1 Gb/s in bytes/s
+    BANDWIDTH_RAM = 3_125_000_000        # 25 Gb/s in bytes/s
+    CO2_NETWORK = 1.10e-11               # g CO2 per byte
+    CO2_RAM = 2.80e-11                   # g CO2 per byte
+    DEFAULT_INDEX_SIZE = 1_000_000       # ~1 MB secondary local index
+
     @classmethod
     def size_map(cls):
         """Mapping from logical type to byte size."""

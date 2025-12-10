@@ -1,0 +1,79 @@
+{
+  "message": "Query cost calculated successfully!",
+  "sql": "SELECT S.quantity, S.location FROM Stock S WHERE S.IDP = 1 AND S.IDW = 2",
+  "db_signature": "DB5",
+  "collection_size_file": "results_TD1.json",
+  "parsed_query": {
+    "collection": "Stock",
+    "filter_fields": [
+      {
+        "name": "IDP",
+        "type": "number"
+      },
+      {
+        "name": "IDW",
+        "type": "number"
+      }
+    ],
+    "project_fields": [
+      {
+        "name": "quantity",
+        "type": "boolean"
+      },
+      {
+        "name": "location",
+        "type": "boolean"
+      }
+    ]
+  },
+  "cost_analysis": {
+    "query": {
+      "collection": "Stock",
+      "db_signature": "DB5",
+      "filter_fields": [
+        {
+          "name": "IDP",
+          "type": "number"
+        },
+        {
+          "name": "IDW",
+          "type": "number"
+        }
+      ],
+      "project_fields": [
+        {
+          "name": "quantity",
+          "type": "boolean"
+        },
+        {
+          "name": "location",
+          "type": "boolean"
+        }
+      ],
+      "sharding_key": "IDC",
+      "has_index": true
+    },
+    "sizes": {
+      "size_input_bytes": "92 B",
+      "size_msg_bytes": "112 B",
+      "size_doc_bytes": "13441128 B"
+    },
+    "distribution": {
+      "S_servers": 1000,
+      "selectivity": "1.00e-05",
+      "res_q_results": 1,
+      "nb_docs_total": 100000,
+      "nb_docs_per_server": 100.0
+    },
+    "volumes": {
+      "vol_network": "9.21e+04 B",
+      "vol_RAM": "1.01e+06 B"
+    },
+    "costs": {
+      "time": "1.06e-03 s",
+      "carbon_network": "1.01e-06 gCO2",
+      "carbon_RAM": "2.84e-05 gCO2",
+      "carbon_total": "2.94e-05 gCO2"
+    }
+  }
+}
