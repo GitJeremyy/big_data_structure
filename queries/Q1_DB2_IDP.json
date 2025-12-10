@@ -60,18 +60,18 @@
     },
     "distribution": {
       "S_servers": 1,
-      "selectivity": "5.00e-08",
-      "res_q_results": 0,
+      "selectivity": "1.00e-05",
+      "res_q_results": 1,
       "nb_docs_total": 100000,
       "nb_docs_per_server": 100.0
     },
     "volumes": {
-      "vol_network": "9.20e+01 B",
+      "vol_network": "2.04e+02 B",
       "vol_RAM": "1.00e+06 B"
     },
     "costs": {
-      "time": "3.21e-04 s",
-      "carbon_network": "1.01e-09 gCO2",
+      "time": "3.22e-04 s",
+      "carbon_network": "2.24e-09 gCO2",
       "carbon_RAM": "2.80e-05 gCO2",
       "carbon_total": "2.80e-05 gCO2"
     }

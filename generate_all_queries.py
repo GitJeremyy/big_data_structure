@@ -116,14 +116,14 @@ for query_def in queries:
         sizes = result["cost_analysis"]["sizes"]
         distribution = result["cost_analysis"]["distribution"]
         
-        print(f"  ✓ Saved to {output_path}")
+        print(f"  [OK] Saved to {output_path}")
         print(f"    size_input: {sizes['size_input_bytes']}")
         print(f"    size_msg: {sizes['size_msg_bytes']}")
         print(f"    S (servers): {distribution['S_servers']}")
         print(f"    res_q: {distribution['res_q_results']}")
         
     except Exception as e:
-        print(f"  ✗ ERROR: {e}")
+        print(f"  [ERROR]: {e}")
 
 print("\n" + "=" * 80)
 print("GENERATION COMPLETE")

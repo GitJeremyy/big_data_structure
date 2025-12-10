@@ -260,25 +260,46 @@ class QueryCostCalculator:
         - Filter on date: 1 / nb_days
         
         Args:
-            collection: Collection name
+            collection: Logical collection name from query
             filter_fields: List of filter conditions
         
         Returns:
             selectivity (0 to 1)
         """
+        # Resolve to physical collection for embedded cases
+        physical_collection = self._resolve_collection(collection)
+        
         # Simple heuristic based on filter field names
         filter_names = [f["name"].lower() for f in filter_fields]
         
+        # Use logical collection name for selectivity logic (query semantics)
+        # but adjust for physical collection when embedded
         if collection.lower() == "stock":
-            if "idp" in filter_names and "idw" in filter_names:
-                # Very specific: one document out of all stock records
-                return 1.0 / (self.stats.nb_products * self.stats.nb_warehouses)
-            elif "idp" in filter_names:
-                # One product across all warehouses
-                return 1.0 / self.stats.nb_products
-            elif "idw" in filter_names:
-                # One warehouse across all products
-                return 1.0 / self.stats.nb_warehouses
+            # Check if Stock is embedded (DB2, DB5)
+            if physical_collection.lower() == "product":
+                # Stock embedded in Product - filtering on IDP gives 1 product
+                if "idp" in filter_names and "idw" in filter_names:
+                    # IDP+IDW: 1 product, then filter Stock array for IDW
+                    # Selectivity is per Product document (1 out of nb_products)
+                    return 1.0 / self.stats.nb_products
+                elif "idp" in filter_names:
+                    # Just IDP: 1 product with all its Stock entries
+                    return 1.0 / self.stats.nb_products
+                elif "idw" in filter_names:
+                    # Just IDW: all products, but need to scan Stock arrays
+                    # Approximately 1/nb_warehouses of products have stock in warehouse W
+                    return 1.0 / self.stats.nb_warehouses
+            else:
+                # Stock is standalone collection
+                if "idp" in filter_names and "idw" in filter_names:
+                    # Very specific: one document out of all stock records
+                    return 1.0 / (self.stats.nb_products * self.stats.nb_warehouses)
+                elif "idp" in filter_names:
+                    # One product across all warehouses
+                    return 1.0 / self.stats.nb_products
+                elif "idw" in filter_names:
+                    # One warehouse across all products
+                    return 1.0 / self.stats.nb_warehouses
         
         elif collection.lower() == "product":
             if "brand" in filter_names:

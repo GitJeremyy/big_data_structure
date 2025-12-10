@@ -309,18 +309,19 @@ WHERE S.IDP = 1 AND S.IDW = 2
 |----|-----------|----------|----------|---------|----------------|---------|---------------|------------------|
 | DB0 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
 | DB1 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
-| DB2 | Product* | IDP | 1 | **0** | 9.20e+01 B | 1000 | 9.20e+04 B | **1000×** |
+| DB2 | Product* | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
 | DB3 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
 | DB4 | Stock | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
-| DB5 | Product* | IDP | 1 | **0** | 9.20e+01 B | 1000 | 9.20e+04 B | **1000×** |
+| DB5 | Product* | IDP | 1 | 1 | 2.04e+02 B | 1000 | 9.21e+04 B | **451×** |
 
-*Stock embedded in Product - query returns 0 because we're filtering by IDP+IDW but Stock is nested
+*Stock embedded in Product - collection mapping resolves Stock→Product automatically
 
 **Key Insights:**
-- ✅ **Sharding matters hugely:** 450-1000× more network traffic with wrong key
-- ⚠️ **DB2 & DB5 return 0 results:** Stock embedded in Product, can't filter by IDP at Stock level
-- 🎯 **Optimal design:** DB0, DB1, DB3, DB4 with IDP sharding (S=1, 204B network)
+- ✅ **Sharding matters hugely:** 451× more network traffic with wrong key (204 B → 92 KB)
+- ✅ **Collection mapping works:** DB2 & DB5 correctly map Stock→Product and return 1 result
+- 🎯 **Optimal design:** Any database with IDP sharding (S=1, 204B network)
 - ❌ **Worst case:** Any database with IDC sharding (S=1000, 92KB network)
+- 📊 **Consistent behavior:** All databases return same result despite different physical schemas
 
 ---
 
