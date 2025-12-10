@@ -185,7 +185,7 @@ big_data_structure/
 │   ├── statistics.py              # Dataset statistics
 │   ├── query_parser.py            # SQL parser
 │   ├── query_cost.py              # Cost calculator
-│   ├── results_TD1.json           # Student results
+│   ├── results_TD1.json           # Our results
 │   ├── teacher_correction_TD1.json # Teacher correction
 │   └── JSON_schema/               # Database schemas (DB0-DB5)
 ├── test_query_cost.py             # Query cost tests
@@ -222,7 +222,7 @@ big_data_structure/
 
 ## 🤝 Contributing
 
-This is an educational project. For questions or improvements, please contact the project maintainers.
+This is an educational project made by Aubin ARROUET--LE BRIGNONEN, Jérémy BAUZIN and Hugo AUPERIN.
 
 ---
 

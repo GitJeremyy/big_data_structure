@@ -178,12 +178,12 @@ GET http://127.0.0.1:8000/TD1/shardingStats?db_signature=DB1
 | DB0 | Stock | 20M | 152 B | 2.83 GB | Standalone |
 | DB1 | Stock | 20M | 152 B | 2.83 GB | Standalone |
 | DB2 | Product | 100K | 1260 B | 120.16 MB | Product contains [Stock] |
-| DB3 | Stock | 20M | 972 B | 18.12 GB | Stock contains Product |
+| DB3 | Stock | 20M | 1260 B | 23.47 GB | Stock contains Product |
 | DB4 | Stock | 20M | 152 B | 2.83 GB | Standalone |
-| DB5 | Product | 100K | 1260 B | 120.16 MB | Product contains [Stock] |
+| DB5 | Stock | 20M | 152 B | 2.83 GB | Standalone |
 
 **Observations:**
-- DB2 & DB5: Stock embedded in Product → fewer documents, larger doc size
+- DB2: Stock embedded in Product → fewer documents, larger doc size
 - DB3: Product embedded in Stock → more documents, much larger total
 - Embedding trades document count for document size
 
@@ -196,11 +196,11 @@ GET http://127.0.0.1:8000/TD1/shardingStats?db_signature=DB1
 {
   "IDP": 123,           // 12 (key) + 8 (number) = 20 B
   "name": "Laptop",     // 12 + 80 (string) = 92 B
-  "price": 999.99,      // 12 + 8 (number) = 20 B
   "brand": "Apple",     // 12 + 80 (string) = 92 B
-  "description": "..."  // 12 + 200 (longstring) = 212 B
+  "description": "...",  // 12 + 200 (longstring) = 212 B
+  ...
 }
-// Total: 20 + 92 + 20 + 92 + 212 + nesting = ~448 B
+// Total: 20 + 92 + 20 + 92 + 212 + ... =  764 B
 ```
 
 ### Example 2: Embedded Document (DB1 - Product with Supplier)
@@ -263,39 +263,9 @@ This file is then used by TD2 for query cost calculations.
 
 ---
 
-## 🎓 Key Takeaways
-
-### Storage Trade-offs
-
-1. **Normalized (DB0)**
-   - ✅ Smaller individual documents
-   - ✅ No data duplication
-   - ❌ More collections to manage
-   - ❌ Requires joins for queries
-
-2. **Denormalized with Embedding (DB2, DB5)**
-   - ✅ Fewer collections
-   - ✅ Related data together
-   - ❌ Larger documents
-   - ❌ Potential data duplication
-
-3. **Inverse Embedding (DB3, DB4)**
-   - ✅ Different query optimization
-   - ❌ Can significantly increase storage
-   - ❌ Complex to maintain
-
-### Best Practices
-
-- **Consider query patterns** - Embed data that's queried together
-- **Watch document size** - MongoDB has 16MB document limit
-- **Balance duplication** - Some duplication is OK for performance
-- **Plan for growth** - Consider how data volume will scale
-
----
-
 ## 🔧 Testing
 
-Run the storage calculator tests:
+Run the storage calculator tests through the API or run:
 ```bash
 uv run python -c "from services.sizing import Sizer; from services.schema_client import Schema; import json; schema = Schema(json.load(open('services/JSON_schema/json-schema-DB1.json'))); sizer = Sizer(schema); print(sizer.calculate_all_sizes())"
 ```
