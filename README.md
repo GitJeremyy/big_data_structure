@@ -175,24 +175,33 @@ WHERE O.date = '2024-01-01'
 ```
 big_data_structure/
 ├── app/
-│   ├── main.py                    # FastAPI application
+│   ├── main.py                     # FastAPI application
 │   └── routers/
-│       ├── bytesCalculator.py     # TD1 endpoints
-│       └── queryParser.py         # TD2 endpoints
+│       ├── bytesCalculator.py      # TD1 endpoints
+│       └── queryParser.py          # TD2 endpoints
 ├── services/
-│   ├── schema_client.py           # JSON schema parser
-│   ├── sizing.py                  # Storage calculations
-│   ├── statistics.py              # Dataset statistics
-│   ├── query_parser.py            # SQL parser
-│   ├── query_cost.py              # Cost calculator
-│   ├── results_TD1.json           # Our results
-│   ├── teacher_correction_TD1.json # Teacher correction
-│   └── JSON_schema/               # Database schemas (DB0-DB5)
-├── test_query_cost.py             # Query cost tests
-├── test_query_parser.py           # Parser tests
-├── README_GENERAL.md              # This file
-├── README_TD1.md                  # TD1 detailed documentation
-└── README_TD2.md                  # TD2 detailed documentation
+│   ├── schema_client.py            # JSON schema parser
+│   ├── sizing.py                   # Storage calculations (Sizer class)
+│   ├── statistics.py               # Dataset statistics & constants
+│   ├── query_parser.py             # SQL query parser
+│   ├── query_cost.py               # Query cost calculator with collection mapping
+│   ├── results_TD1.json            # Storage analysis results
+│   ├── teacher_correction_TD1.json # Teacher correction reference
+│   └── JSON_schema/                # Database schemas
+│       ├── DB0.json - DB5.json     # Schema definitions for each design
+│       └── json-schema-DB*.json    # JSON schema format versions
+├── queries/                        # Generated query analysis results
+│   ├── Q1_DB0_IDP.json             # Q1 on DB0 with IDP sharding
+│   ├── Q1_DB0_IDC.json             # Q1 on DB0 with IDC sharding
+│   └── ...                         # 36 total files (3 queries × 6 DBs × 2 sharding)
+├── generate_all_queries.py         # Automated query analysis generator
+├── test_query_cost.py              # Query cost unit tests
+├── test_query_parser.py            # Query parser unit tests
+├── formulas_TD2.pdf                # LaTeX formulas documentation
+├── README.md                       # This file (project overview)
+├── README_TD1.md                   # TD1 detailed documentation
+├── README_TD2.md                   # TD2 detailed documentation
+└── pyproject.toml                  # Python dependencies (uv package manager)
 ```
 
 ---

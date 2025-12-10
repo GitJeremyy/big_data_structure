@@ -193,7 +193,16 @@ This allows comparing different database designs fairly, even when collections a
 
 ### Core Functions
 
-The query cost calculator (`services/query_cost.py`) implements these key functions:
+The system uses two main components for query analysis:
+
+**`parse_query(sql, db_signature)` (in `services/query_parser.py`)**
+- Parses SQL-like queries into structured format
+- Extracts collection name from `FROM` clause (e.g., `Stock S` → collection: `Stock`)
+- Extracts filter fields from `WHERE` clause with their types (e.g., `IDP = 1` → `{name: "IDP", type: "number"}`)
+- Extracts project fields from `SELECT` clause (e.g., `quantity, location`)
+- Supports table aliases and infers field types from JSON schema
+
+The query cost calculator (`services/query_cost.py`) then uses the parsed query:
 
 **`calculate_query_sizes(collection, filter_fields, project_fields)`**
 - Loads JSON schema to infer actual field types
