@@ -225,7 +225,6 @@ big_data_structure/
 
 - **[TD1 Documentation](README_TD1.md)** - Detailed storage analysis guide
 - **[TD2 Documentation](README_TD2.md)** - Detailed query cost analysis guide
-- **[API Documentation](http://127.0.0.1:8000/docs)** - Interactive Swagger UI
 
 ---
 
