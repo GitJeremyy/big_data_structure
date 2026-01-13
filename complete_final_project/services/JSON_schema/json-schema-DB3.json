@@ -3,97 +3,6 @@
   "description": "",
   "type": "object",
   "properties": {
-    "Product": {
-      "type": "object",
-      "properties": {
-        "IDP": {
-          "type": "number"
-        },
-        "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "price": {
-          "type": "integer"
-        },
-        "brand": {
-          "type": "string",
-          "minLength": 1
-        },
-        "description": {
-          "type": "string",
-          "minLength": 1
-        },
-        "image_url": {
-          "type": "string",
-          "minLength": 1
-        },
-        "categories": {
-          "type": "array",
-          "items": {
-            "required": [],
-            "properties": {}
-          }
-        },
-        "supplier": {
-          "type": "object",
-          "properties": {
-            "IDS": {
-              "type": "number"
-            },
-            "name": {
-              "type": "string",
-              "minLength": 1
-            },
-            "SIRET": {
-              "type": "string",
-              "minLength": 1
-            },
-            "headOffice": {
-              "type": "string",
-              "minLength": 1
-            },
-            "Revenue": {
-              "type": "object",
-              "properties": {
-                "amount": {
-                  "type": "number"
-                },
-                "currency": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "year": {
-                  "type": "number"
-                }
-              },
-              "required": [
-                "amount",
-                "currency",
-                "year"
-              ]
-            }
-          },
-          "required": [
-            "IDS",
-            "name",
-            "SIRET",
-            "headOffice",
-            "Revenue"
-          ]
-        }
-      },
-      "required": [
-        "IDP",
-        "name",
-        "price",
-        "brand",
-        "description",
-        "image_url",
-        "categories",
-        "supplier"
-      ]
-    },
     "Stock": {
       "type": "object",
       "properties": {
@@ -104,18 +13,123 @@
           "type": "string",
           "minLength": 1
         },
-        "IDP": {
-          "type": "number"
-        },
         "IDW": {
           "type": "number"
+        },
+        "product": {
+          "type": "object",
+          "properties": {
+            "IDP": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "price": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "VAT": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "amount",
+                "currency",
+                "VAT"
+              ]
+            },
+            "brand": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "image_url": {
+              "type": "string",
+              "minLength": 1
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "required": [],
+                "properties": {}
+              }
+            },
+            "supplier": {
+              "type": "object",
+              "properties": {
+                "IDS": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "SIRET": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "headOffice": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "Revenue": {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "year": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currency",
+                    "year"
+                  ]
+                }
+              },
+              "required": [
+                "IDS",
+                "name",
+                "SIRET",
+                "headOffice",
+                "Revenue"
+              ]
+            }
+          },
+          "required": [
+            "IDP",
+            "name",
+            "price",
+            "brand",
+            "description",
+            "image_url",
+            "categories",
+            "supplier"
+          ]
         }
       },
       "required": [
         "quantity",
         "location",
-        "IDP",
-        "IDW"
+        "IDW",
+        "product"
       ]
     },
     "Warehouse": {
@@ -141,7 +155,7 @@
     "OrderLine": {
       "type": "object",
       "properties": {
-        "product_id": {
+        "IDP": {
           "type": "number"
         },
         "date": {
@@ -164,7 +178,7 @@
         }
       },
       "required": [
-        "product_id",
+        "IDP",
         "date",
         "quantity",
         "deliveryDate",
@@ -215,7 +229,6 @@
     }
   },
   "required": [
-    "Product",
     "Stock",
     "Warehouse",
     "OrderLine",

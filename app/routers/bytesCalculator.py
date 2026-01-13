@@ -106,6 +106,11 @@ async def calculate_bytes(
     schema.print_entities_and_relations()
 
     # Compute collection sizes
+    # Optional: can pass manual_counts here if needed
+    # manual_counts = {
+    #     "Product": {"integer": 5, "string": 4, "longstring": 2, ...},
+    #     ...
+    # }
     sizer = Sizer(schema, stats)
     sizes = sizer.compute_collection_sizes()
 

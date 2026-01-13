@@ -1,0 +1,206 @@
+{
+  "DB0": {
+    "description": "DB0: Prod, Cat, Supp, St, Wa, OL, Cl",
+    "database_total": "1259.37 GB",
+    "collections": [
+      {
+        "collection": "Categories",
+        "doc_size_bytes": 92,
+        "num_docs": 0,
+        "collection_size": "0.00 GB"
+      },
+      {
+        "collection": "Supplier",
+        "doc_size_bytes": 440,
+        "num_docs": 0,
+        "collection_size": "0.00 GB"
+      },
+      {
+        "collection": "Product",
+        "doc_size_bytes": 764,
+        "num_docs": 100000,
+        "collection_size": "72.86 MB"
+      },
+      {
+        "collection": "Stock",
+        "doc_size_bytes": 152,
+        "num_docs": 20000000,
+        "collection_size": "2.83 GB"
+      },
+      {
+        "collection": "Warehouse",
+        "doc_size_bytes": 132,
+        "num_docs": 200,
+        "collection_size": "25.78 KB"
+      },
+      {
+        "collection": "OrderLine",
+        "doc_size_bytes": 336,
+        "num_docs": 4000000000,
+        "collection_size": "1251.70 GB"
+      },
+      {
+        "collection": "Client",
+        "doc_size_bytes": 512,
+        "num_docs": 10000000,
+        "collection_size": "4.77 GB"
+      }
+    ]
+  },
+  "DB1": {
+    "description": "DB1: Prod{[Cat],Supp}, St, Wa, OL, Cl",
+    "database_total": "1259.40 GB",
+    "collections": [
+      {
+        "collection": "Product",
+        "doc_size_bytes": 1116,
+        "num_docs": 100000,
+        "collection_size": "106.43 MB"
+      },
+      {
+        "collection": "Stock",
+        "doc_size_bytes": 152,
+        "num_docs": 20000000,
+        "collection_size": "2.83 GB"
+      },
+      {
+        "collection": "Warehouse",
+        "doc_size_bytes": 132,
+        "num_docs": 200,
+        "collection_size": "25.78 KB"
+      },
+      {
+        "collection": "OrderLine",
+        "doc_size_bytes": 336,
+        "num_docs": 4000000000,
+        "collection_size": "1251.70 GB"
+      },
+      {
+        "collection": "Client",
+        "doc_size_bytes": 512,
+        "num_docs": 10000000,
+        "collection_size": "4.77 GB"
+      }
+    ]
+  },
+  "DB2": {
+    "description": "DB2: Prod{[Cat],Supp,[St]}, Wa, OL, Cl",
+    "database_total": "1256.58 GB",
+    "collections": [
+      {
+        "collection": "Product",
+        "doc_size_bytes": 1260,
+        "num_docs": 100000,
+        "collection_size": "120.16 MB"
+      },
+      {
+        "collection": "Warehouse",
+        "doc_size_bytes": 132,
+        "num_docs": 200,
+        "collection_size": "25.78 KB"
+      },
+      {
+        "collection": "OrderLine",
+        "doc_size_bytes": 336,
+        "num_docs": 4000000000,
+        "collection_size": "1251.70 GB"
+      },
+      {
+        "collection": "Client",
+        "doc_size_bytes": 512,
+        "num_docs": 10000000,
+        "collection_size": "4.77 GB"
+      }
+    ]
+  },
+  "DB3": {
+    "description": "DB3: St{Prod{[Cat],Supp}}, Wa, OL, Cl",
+    "database_total": "1279.94 GB",
+    "collections": [
+      {
+        "collection": "Stock",
+        "doc_size_bytes": 1260,
+        "num_docs": 20000000,
+        "collection_size": "23.47 GB"
+      },
+      {
+        "collection": "Warehouse",
+        "doc_size_bytes": 132,
+        "num_docs": 200,
+        "collection_size": "25.78 KB"
+      },
+      {
+        "collection": "OrderLine",
+        "doc_size_bytes": 336,
+        "num_docs": 4000000000,
+        "collection_size": "1251.70 GB"
+      },
+      {
+        "collection": "Client",
+        "doc_size_bytes": 512,
+        "num_docs": 10000000,
+        "collection_size": "4.77 GB"
+      }
+    ]
+  },
+  "DB4": {
+    "description": "DB4: St, Wa, OL{Prod{[Cat],Supp}},Cl",
+    "database_total": "5386.17 GB",
+    "collections": [
+      {
+        "collection": "Stock",
+        "doc_size_bytes": 112,
+        "num_docs": 20000000,
+        "collection_size": "2.09 GB"
+      },
+      {
+        "collection": "Warehouse",
+        "doc_size_bytes": 132,
+        "num_docs": 200,
+        "collection_size": "25.78 KB"
+      },
+      {
+        "collection": "OrderLine",
+        "doc_size_bytes": 1444,
+        "num_docs": 4000000000,
+        "collection_size": "5379.32 GB"
+      },
+      {
+        "collection": "Client",
+        "doc_size_bytes": 512,
+        "num_docs": 10000000,
+        "collection_size": "4.77 GB"
+      }
+    ]
+  },
+  "DB5": {
+    "description": "DB5: Prod{[Cat],Supp,[OL]}, St, Wa, Cl",
+    "database_total": "1259.40 GB",
+    "collections": [
+      {
+        "collection": "Product",
+        "doc_size_bytes": 13441128,
+        "num_docs": 100000,
+        "collection_size": "1251.80 GB"
+      },
+      {
+        "collection": "Stock",
+        "doc_size_bytes": 152,
+        "num_docs": 20000000,
+        "collection_size": "2.83 GB"
+      },
+      {
+        "collection": "Warehouse",
+        "doc_size_bytes": 132,
+        "num_docs": 200,
+        "collection_size": "25.78 KB"
+      },
+      {
+        "collection": "Client",
+        "doc_size_bytes": 512,
+        "num_docs": 10000000,
+        "collection_size": "4.77 GB"
+      }
+    ]
+  }
+}

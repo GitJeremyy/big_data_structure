@@ -3,6 +3,65 @@
   "description": "",
   "type": "object",
   "properties": {
+    "Categories": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "title"
+      ]
+    },
+    "Supplier": {
+      "type": "object",
+      "properties": {
+        "IDS": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "SIRET": {
+          "type": "string",
+          "minLength": 1
+        },
+        "headOffice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "Revenue": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string",
+              "minLength": 1
+            },
+            "year": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "amount",
+            "currency",
+            "year"
+          ]
+        }
+      },
+      "required": [
+        "IDS",
+        "name",
+        "SIRET",
+        "headOffice",
+        "Revenue"
+      ]
+    },
     "Product": {
       "type": "object",
       "properties": {
@@ -14,7 +73,24 @@
           "minLength": 1
         },
         "price": {
-          "type": "integer"
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string",
+              "minLength": 1
+            },
+            "VAT": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "amount",
+            "currency",
+            "VAT"
+          ]
         },
         "brand": {
           "type": "string",
@@ -28,59 +104,12 @@
           "type": "string",
           "minLength": 1
         },
-        "categories": {
-          "type": "array",
-          "items": {
-            "required": [],
-            "properties": {}
-          }
+        "title": {
+          "type": "string",
+          "minLength": 1
         },
-        "supplier": {
-          "type": "object",
-          "properties": {
-            "IDS": {
-              "type": "number"
-            },
-            "name": {
-              "type": "string",
-              "minLength": 1
-            },
-            "SIRET": {
-              "type": "string",
-              "minLength": 1
-            },
-            "headOffice": {
-              "type": "string",
-              "minLength": 1
-            },
-            "Revenue": {
-              "type": "object",
-              "properties": {
-                "amount": {
-                  "type": "number"
-                },
-                "currency": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "year": {
-                  "type": "number"
-                }
-              },
-              "required": [
-                "amount",
-                "currency",
-                "year"
-              ]
-            }
-          },
-          "required": [
-            "IDS",
-            "name",
-            "SIRET",
-            "headOffice",
-            "Revenue"
-          ]
+        "IDS": {
+          "type": "number"
         }
       },
       "required": [
@@ -90,8 +119,8 @@
         "brand",
         "description",
         "image_url",
-        "categories",
-        "supplier"
+        "title",
+        "IDS"
       ]
     },
     "Stock": {
@@ -141,7 +170,7 @@
     "OrderLine": {
       "type": "object",
       "properties": {
-        "product_id": {
+        "IDP": {
           "type": "number"
         },
         "date": {
@@ -164,7 +193,7 @@
         }
       },
       "required": [
-        "product_id",
+        "IDP",
         "date",
         "quantity",
         "deliveryDate",
@@ -215,6 +244,8 @@
     }
   },
   "required": [
+    "Categories",
+    "Supplier",
     "Product",
     "Stock",
     "Warehouse",

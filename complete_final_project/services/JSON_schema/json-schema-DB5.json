@@ -14,7 +14,24 @@
           "minLength": 1
         },
         "price": {
-          "type": "integer"
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string",
+              "minLength": 1
+            },
+            "VAT": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "amount",
+            "currency",
+            "VAT"
+          ]
         },
         "brand": {
           "type": "string",
@@ -81,6 +98,44 @@
             "headOffice",
             "Revenue"
           ]
+        },
+        "orderLine": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "required": [
+              "date",
+              "quantity",
+              "deliveryDate",
+              "comment",
+              "grade",
+              "IDC"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "deliveryDate": {
+                "type": "string",
+                "minLength": 1
+              },
+              "comment": {
+                "type": "string",
+                "minLength": 1
+              },
+              "grade": {
+                "type": "number"
+              },
+              "IDC": {
+                "type": "number"
+              }
+            }
+          }
         }
       },
       "required": [
@@ -91,7 +146,8 @@
         "description",
         "image_url",
         "categories",
-        "supplier"
+        "supplier",
+        "orderLine"
       ]
     },
     "Stock": {
@@ -136,40 +192,6 @@
         "IDW",
         "address",
         "capacity"
-      ]
-    },
-    "OrderLine": {
-      "type": "object",
-      "properties": {
-        "product_id": {
-          "type": "number"
-        },
-        "date": {
-          "type": "string",
-          "minLength": 1
-        },
-        "quantity": {
-          "type": "number"
-        },
-        "deliveryDate": {
-          "type": "string",
-          "minLength": 1
-        },
-        "comment": {
-          "type": "string",
-          "minLength": 1
-        },
-        "grade": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "product_id",
-        "date",
-        "quantity",
-        "deliveryDate",
-        "comment",
-        "grade"
       ]
     },
     "Client": {
@@ -218,7 +240,6 @@
     "Product",
     "Stock",
     "Warehouse",
-    "OrderLine",
     "Client"
   ]
 }

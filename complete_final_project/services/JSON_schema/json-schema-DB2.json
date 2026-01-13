@@ -14,7 +14,24 @@
           "minLength": 1
         },
         "price": {
-          "type": "integer"
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string",
+              "minLength": 1
+            },
+            "VAT": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "amount",
+            "currency",
+            "VAT"
+          ]
         },
         "brand": {
           "type": "string",
@@ -81,6 +98,30 @@
             "headOffice",
             "Revenue"
           ]
+        },
+        "stock": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "required": [
+              "quantity",
+              "location",
+              "IDW"
+            ],
+            "properties": {
+              "quantity": {
+                "type": "number"
+              },
+              "location": {
+                "type": "string",
+                "minLength": 1
+              },
+              "IDW": {
+                "type": "number"
+              }
+            }
+          }
         }
       },
       "required": [
@@ -91,31 +132,8 @@
         "description",
         "image_url",
         "categories",
-        "supplier"
-      ]
-    },
-    "Stock": {
-      "type": "object",
-      "properties": {
-        "quantity": {
-          "type": "number"
-        },
-        "location": {
-          "type": "string",
-          "minLength": 1
-        },
-        "IDP": {
-          "type": "number"
-        },
-        "IDW": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "quantity",
-        "location",
-        "IDP",
-        "IDW"
+        "supplier",
+        "stock"
       ]
     },
     "Warehouse": {
@@ -141,7 +159,7 @@
     "OrderLine": {
       "type": "object",
       "properties": {
-        "product_id": {
+        "IDP": {
           "type": "number"
         },
         "date": {
@@ -164,7 +182,7 @@
         }
       },
       "required": [
-        "product_id",
+        "IDP",
         "date",
         "quantity",
         "deliveryDate",
@@ -216,7 +234,6 @@
   },
   "required": [
     "Product",
-    "Stock",
     "Warehouse",
     "OrderLine",
     "Client"
